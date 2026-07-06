@@ -7,7 +7,7 @@
 
 ## Register conflicts
 
-- The KAREL library writes its results to exchange registers (`R[60]`–`R[62]`, `PR[60]`, `SR[60]` by default) and uses `PR[65]` for the detection pose and `R[63]` for the PTP/LIN switch. Check that these do not conflict with the registers used by your own programs and change them via the KAREL variables if required. See [Robot Program → Exchange registers](../3_0_robot_program/index.md#exchange-registers).
+- The KAREL library writes its results to exchange registers (`R[60]`–`R[62]`, `PR[60]`, `SR[60]` by default) and uses `PR[65]` for the detection pose and `R[63]` for the PTP/LIN switch. Check that these do not conflict with the registers used by your own programs and change them via the KAREL variables if required. See [KAREL Reference → Exchange registers](../4_0_reference/index.md#exchange-registers).
 - If you change the detection pose register, update **both** the TP programs and the `w_detect_pose_reg` KAREL variable.
 
 ## Communication errors

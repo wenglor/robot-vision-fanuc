@@ -10,8 +10,8 @@ theme:
   logo: images/wenglor_logo.svg
   features:
     - navigation.indexes
+    - navigation.top
     - content.code.copy
-    - toc.integrate
     - search.highlight
 
 nav:
@@ -22,13 +22,17 @@ nav:
     - 2_0_user_configuration/index.md
   - 3. Robot Program:
     - 3_0_robot_program/index.md
-  - 4. Troubleshooting:
-    - 4_0_troubleshooting/index.md
-  - 5. Support & Feedback:
-    - 5_0_support_and_feedback/index.md
+  - 4. KAREL Reference:
+    - 4_0_reference/index.md
+  - 5. Troubleshooting:
+    - 5_0_troubleshooting/index.md
+  - 6. Support & Feedback:
+    - 6_0_support_and_feedback/index.md
 
 markdown_extensions:
   - admonition
+  - attr_list
+  - md_in_html
   - codehilite
   - toc:
       permalink: true
@@ -39,6 +43,9 @@ markdown_extensions:
   - pymdownx.tabbed
   - pymdownx.highlight
   - pymdownx.snippets
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 docs_dir: docs
 
