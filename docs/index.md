@@ -1,8 +1,8 @@
 # FANUC Robots Vision Manual
 
-!!! note
-
-    This manual focuses exclusively on FANUC Robots-specific topics. For general robot vision information, please refer to the [wenglor robot vision manual](https://wenglor.github.io/wenglor-robot-vision/).
+> NOTE
+>
+> This manual focuses exclusively on FANUC Robots-specific topics. For general robot vision information, please refer to the [wenglor robot vision manual](https://wenglor.github.io/robot-vision-generic-string/).
 
 This repository contains an example FANUC program to set up and start the generic vision interface to wenglor Machine Vision Devices on your FANUC robot.
 
@@ -14,43 +14,23 @@ The robot vision example for FANUC consists of the following files:
 - `W_UPDATE_REFERENCE_FRAME.tp` — reference-frame update TP program.
 - `W_MOVE.tp` — helper TP program that moves the robot to a pose register (PTP or LIN).
 
-!!! note
+> NOTE
+>
+> The robot example is available on [www.wenglor.com/product/DNNF023](https://www.wenglor.com/product/DNNF023) → Downloads → Programming examples and configuration files → Examples_Robot_Vision.
+>
+> - It was tested with the **FANUC R-30iB Mate Plus** robot controller with software **V9.40** and the **LR Mate 200iD** robot arm. Make sure to use the same software version on the FANUC robot controller.
+> - Working with KAREL files requires the system variable `$KAREL_ENB` to be set to `1`.
 
-    The robot example is available on [www.wenglor.com/product/DNNF023](https://www.wenglor.com/product/DNNF023) → Downloads → Programming examples and configuration files → Examples_Robot_Vision.
+---
 
-    - It was tested with the **FANUC R-30iB Mate Plus** robot controller with software **V9.40** and the **LR Mate 200iD** robot arm. Make sure to use the same software version on the FANUC robot controller.
-    - Working with KAREL files requires the system variable `$KAREL_ENB` to be set to `1`.
+## Table of Contents
 
-## Contents
+1. [Installation & Setup](1_0_installation/index.md)
+2. [User Configuration](2_0_user_configuration/index.md)
+3. [Robot Program](3_0_robot_program/index.md)
+4. [Troubleshooting](4_0_troubleshooting/index.md)
+5. [Support & Feedback](5_0_support_and_feedback/index.md)
 
-<div class="grid cards" markdown>
-
-- :material-download: **[Installation & Setup](1_0_installation/index.md)**
-
-    Prepare the controller, network, tool frame, and transfer the files.
-
-- :material-tune: **[User Configuration](2_0_user_configuration/index.md)**
-
-    Adjust the KAREL variables and set the calibration/detection poses.
-
-- :material-robot-industrial: **[Robot Program](3_0_robot_program/index.md)**
-
-    The calibration and detection workflow and the example TP programs.
-
-- :material-book-open-variant: **[KAREL Reference](4_0_reference/index.md)**
-
-    Exchange registers, callable `W_LIBRARY` routines, and unit conventions.
-
-- :material-wrench: **[Troubleshooting](5_0_troubleshooting/index.md)**
-
-    Common issues, device error codes, and how to resolve them.
-
-- :material-lifebuoy: **[Support & Feedback](6_0_support_and_feedback/index.md)**
-
-    Report bugs, request features, and find downloads.
-
-</div>
-
-!!! note
-
-    The generic robot vision API (commands, return values, error codes), the calibration guidelines, and the uniVision job setup are documented once in the [wenglor robot vision manual](https://wenglor.github.io/wenglor-robot-vision/4_0_robot_vision_server/) and are **not** repeated here. This manual only describes how the FANUC example uses them.
+> NOTE
+>
+> The generic robot vision API (commands, return values, error codes), the calibration guidelines, and the uniVision job setup are documented once in the [wenglor robot vision manual](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/) and are **not** repeated here. This manual only describes how the FANUC example uses them.

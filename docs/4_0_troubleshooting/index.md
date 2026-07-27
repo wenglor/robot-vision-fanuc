@@ -7,7 +7,7 @@
 
 ## Register conflicts
 
-- The KAREL library writes its results to exchange registers (`R[60]`–`R[62]`, `PR[60]`, `SR[60]` by default) and uses `PR[65]` for the detection pose and `R[63]` for the PTP/LIN switch. Check that these do not conflict with the registers used by your own programs and change them via the KAREL variables if required. See [KAREL Reference → Exchange registers](../4_0_reference/index.md#exchange-registers).
+- The KAREL library writes its results to exchange registers (`R[60]`–`R[62]`, `PR[60]`, `SR[60]` by default) and uses `PR[65]` for the detection pose and `R[63]` for the PTP/LIN switch. Check that these do not conflict with the registers used by your own programs and change them via the KAREL variables if required. See [Robot Program → Exchange registers](../3_0_robot_program/index.md#exchange-registers).
 - If you change the detection pose register, update **both** the TP programs and the `w_detect_pose_reg` KAREL variable.
 
 ## Communication errors
@@ -25,7 +25,7 @@
 - Prefer a wenglor ZVZJ calibration target over a printed one.
 - Check the reprojection error returned by `calc_calibration` — high values indicate a poor calibration.
 
-For the general calibration guidelines, see the [Calibration Guidelines](https://wenglor.github.io/wenglor-robot-vision/4_0_robot_vision_server/4_1_calibration_guidelines/) in the wenglor robot vision manual.
+For the general calibration guidelines, see the [Calibration Guidelines](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_1_calibration_guidelines/) in the wenglor robot vision manual.
 
 ## Height offset in detected poses
 
@@ -34,20 +34,7 @@ For the general calibration guidelines, see the [Calibration Guidelines](https:/
 
 ## Error codes returned by the device
 
-If the robot server returns a negative error code (`-5001` … `-5010`), it indicates a problem on the vision-device side. For the meaning of each code, see the [Generic Robot Vision Interface → Error codes](https://wenglor.github.io/wenglor-robot-vision/4_0_robot_vision_server/4_5_0_generic_robot_vision_interface/#error-codes) in the wenglor robot vision manual.
-
-| Code | Error message |
-| --- | --- |
-| `-5001` | General Error |
-| `-5002` | Badly formatted request |
-| `-5003` | No connection to uniVision |
-| `-5004` | Unknown uniVision job name |
-| `-5005` | Badly configured uniVision job |
-| `-5006` | Calibration failed |
-| `-5007` | No calibration data |
-| `-5008` | No object found |
-| `-5009` | Bad or empty device robot vision message |
-| `-5010` | Index error |
+If the robot server returns a negative error code (`-5001` … `-5010`), the KAREL library passes it through unchanged into the exchange register (or string register) that the calling routine writes to — it indicates a problem on the vision-device side, not in the KAREL library itself. For the meaning of each code, see the [Generic Robot Vision Interface → Error codes](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_5_0_generic_robot_vision_interface/#error-codes) in the wenglor robot vision manual.
 
 ## No user prompts during calibration
 

@@ -20,6 +20,18 @@ Download the robot example from [www.wenglor.com/product/DNNF023](https://www.we
 - `W_UPDATE_REFERENCE_FRAME.tp` — reference-frame update example.
 - `W_MOVE.tp` — helper program that moves the robot to the exchange pose register (PTP or LIN).
 
+## Commissioning steps
+
+```mermaid
+graph LR
+    A[Network setup] --> B[Socket messaging]
+    B --> C[Tool setup]
+    C --> D["System variables<br>$KAREL_ENB = 1"]
+    D --> E[Transfer files<br>to controller]
+    E --> F["Initialize KAREL vars<br>(run W_LIBRARY once)"]
+    F --> G[User Configuration]
+```
+
 ## Network setup of robot controller
 
 Adjust the network settings of the robot controller so it can reach the Machine Vision Device (by default `192.168.100.1`). Go to **Menu → (6) Setup → Setup 2 → (9) Host Comm.**
@@ -38,9 +50,9 @@ For details, see socket messaging in the operating instructions of FANUC.
 <!-- PLACEHOLDER IMAGE: Host Comm client (C1) configuration with device IP and port -->
 ![TODO: Socket messaging client C1](images/02_socket_messaging_client.png)
 
-!!! warning
-
-    The client tag configured here (e.g. `C1:`) must match the `w_client_tag` KAREL variable. See [User Configuration](../2_0_user_configuration/index.md).
+> WARNING
+>
+> The client tag configured here (e.g. `C1:`) must match the `w_client_tag` KAREL variable. See [User Configuration](../2_0_user_configuration/index.md).
 
 ## Tool setup
 
@@ -71,9 +83,9 @@ For transferring the files via a USB stick:
 <!-- PLACEHOLDER IMAGE: File transfer from USB to Mem Device (MD) -->
 ![TODO: Transfer files via USB](images/05_transfer_files_usb.png)
 
-!!! note
-
-    On the Machine Vision Device website (Tab `Jobs` → `Robot Server`), make sure the robot server is active and the robot manufacturer is set to **Generic** (string based). See [Settings on Device Website](https://wenglor.github.io/wenglor-robot-vision/4_0_robot_vision_server/4_2_0_settings_on_device_website/) in the wenglor robot vision manual.
+> NOTE
+>
+> On the Machine Vision Device website (Tab `Jobs` → `Robot Server`), make sure the robot server is active and the robot manufacturer is set to **Generic** (string based). See [Settings on Device Website](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_2_0_settings_on_device_website/) in the wenglor robot vision manual.
 
 ## Initialize the KAREL variables
 

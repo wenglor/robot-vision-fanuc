@@ -1,8 +1,8 @@
 site_name: FANUC Robots Vision Manual
 site_description: Example FANUC (R-30iB) integration for the wenglor robot vision API.
-site_url: https://wenglor.github.io/wenglor-fanuc-robots-vision/
-repo_url: https://github.com/wenglor/wenglor-fanuc-robots-vision
-repo_name: wenglor-fanuc-robots-vision
+site_url: https://wenglor.github.io/robot-vision-fanuc/
+repo_url: https://github.com/wenglor/robot-vision-fanuc
+repo_name: robot-vision-fanuc
 use_directory_urls: true
 
 theme:
@@ -11,8 +11,12 @@ theme:
   features:
     - navigation.indexes
     - navigation.top
+    - navigation.sections
     - content.code.copy
+    - content.tabs.link
+    - toc.integrate
     - search.highlight
+    - search.suggest
 
 nav:
   - index.md
@@ -22,12 +26,10 @@ nav:
     - 2_0_user_configuration/index.md
   - 3. Robot Program:
     - 3_0_robot_program/index.md
-  - 4. KAREL Reference:
-    - 4_0_reference/index.md
-  - 5. Troubleshooting:
-    - 5_0_troubleshooting/index.md
-  - 6. Support & Feedback:
-    - 6_0_support_and_feedback/index.md
+  - 4. Troubleshooting:
+    - 4_0_troubleshooting/index.md
+  - 5. Support & Feedback:
+    - 5_0_support_and_feedback/index.md
 
 markdown_extensions:
   - admonition
@@ -39,13 +41,15 @@ markdown_extensions:
   - pymdownx.arithmatex:
       generic: true
   - pymdownx.details
-  - pymdownx.superfences
-  - pymdownx.tabbed
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
   - pymdownx.highlight
   - pymdownx.snippets
-  - pymdownx.emoji:
-      emoji_index: !!python/name:material.extensions.emoji.twemoji
-      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 docs_dir: docs
 
@@ -56,6 +60,8 @@ copyright: "© 2026 wenglor sensoric group"
 
 extra_javascript:
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+  - path: javascripts/mermaid.mjs
+    type: module
 
 extra_css:
   - css/image_format.css

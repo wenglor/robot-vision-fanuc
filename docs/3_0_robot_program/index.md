@@ -2,6 +2,59 @@
 
 The example program implements a complete robot vision workflow: calibrating the camera to the robot, detecting objects, and moving to them. It is split into a KAREL backend (`W_LIBRARY`) that does the socket communication with the wenglor robot server, and TP programs that orchestrate the workflow.
 
+## Exchange registers
+
+These are the default registers used to return values from the KAREL routines. They are editable via the KAREL variables (select the `W_LIBRARY` program). See [User Configuration](../2_0_user_configuration/index.md).
+
+| Register | KAREL variable | Note |
+| --- | --- | --- |
+| `R[60]` | `w_exch_reg_1` | Used for single and multiple output routines. Can contain BOOLEAN, INTEGER and REAL. |
+| `R[61]` | `w_exch_reg_2` | Only used if two or more outputs are required. Can contain BOOLEAN, INTEGER and REAL. |
+| `R[62]` | `w_exch_reg_3` | Placeholder for routines with more than two outputs. Can contain BOOLEAN, INTEGER and REAL. |
+| `PR[60]` | `w_pose_exch_reg` | Output pose, e.g. object pose or calibration target pose (validation). |
+| `SR[60]` | `w_string_exch_reg` | Output string, e.g. additional value or current uniVision job name. |
+
+## Callable KAREL routines
+
+Call a routine with `CALL W_LIBRARY('<routine>' [, <arg>])`. The results are written to the exchange registers above.
+
+| Routine | Input | Example | Output |
+| --- | --- | --- | --- |
+| `cam_status` | — | `CALL W_LIBRARY('cam_status')` | `w_exch_reg_1`: `1` (calibration data found) or `0` (no calibration data). |
+| `load_job` | 1. job name | `CALL W_LIBRARY('load_job','find_objects.u3p')` | — |
+| `get_job` | — | `CALL W_LIBRARY('get_job')` | `w_string_exch_reg`: name of active uniVision job. |
+| `clear_calib_buffer` | — | `CALL W_LIBRARY('clear_calib_buffer')` | — |
+| `add_calib_pose` | — | `CALL W_LIBRARY('add_calib_pose')` | — |
+| `calc_calibration` | — | `CALL W_LIBRARY('calc_calibration')` | `w_exch_reg_1`: reprojection error / accuracy of the intrinsic camera calibration. |
+| `calib_to_ground` | — | `CALL W_LIBRARY('calib_to_ground')` | — |
+| `calib_to_target` | — | `CALL W_LIBRARY('calib_to_target')` | — |
+| `run_calibration` | — | `CALL W_LIBRARY('run_calibration')` | — |
+| `validate_calibration` | 1. safety offset in mm (REAL) | `CALL W_LIBRARY('validate_calibration', 10.5)` | Moves robot to the target for visual validation. |
+| `calibrate_if_needed` | 1. safety offset in mm (REAL) | `CALL W_LIBRARY('calibrate_if_needed', 10.5)` | Runs a calibration only if no calibration data is present. |
+| `detect_objects` | — | `CALL W_LIBRARY('detect_objects')` | `w_pose_exch_reg`: object pose linked to uniVision `Device Robot Vision` Result List Index 0. |
+| `detect_target` | — | `CALL W_LIBRARY('detect_target')` | `w_pose_exch_reg`: calibration target pose. |
+| `num_objects` | — | `CALL W_LIBRARY('num_objects')` | `w_exch_reg_1`: number of found objects. |
+| `pose_by_index` | 1. index of object | `CALL W_LIBRARY('pose_by_index',R[11])` | `w_pose_exch_reg`: object pose for the given index. |
+| `shape_by_index` | 1. index of object | `CALL W_LIBRARY('shape_by_index',R[11])` | `w_exch_reg_1`: shape model ID for the object with the given index. |
+| `value_by_index` | 1. index of object | `CALL W_LIBRARY('value_by_index',R[11])` | `w_string_exch_reg`: additional value for the object with the given index. |
+
+> NOTE
+>
+> The KAREL routines are thin wrappers around the generic string based robot vision API. For the underlying commands, return values, and error codes, see the [Generic Robot Vision Interface](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_5_0_generic_robot_vision_interface/) in the wenglor robot vision manual.
+
+> NOTE
+>
+> `detect_target` and `calib_to_target` wrap the `target:pose` and `calibration:target` commands, used to detect a calibration target's pose or recalibrate the camera-to-target relation without writing a new calibration file (e.g. for mobile platforms, see `W_UPDATE_REFERENCE_FRAME` below). See [Target Pose and Camera-to-Target Calibration](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_6_0_target_pose_and_camera_to_target/) in the wenglor robot vision manual.
+
+## Units and conventions
+
+The generic robot vision API uses the following conventions, which the KAREL library maps to the FANUC representation:
+
+- Positions `x, y, z` are exchanged in **meters**; FANUC works in **millimeters**.
+- Orientations `rx, ry, rz` are exchanged as a **rotation vector** (Rodrigues convention, in radians); FANUC uses **W, P, R** Euler angles.
+
+See the command tables in the [Generic Robot Vision Interface](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_5_0_generic_robot_vision_interface/) in the wenglor robot vision manual.
+
 ## Program structure
 
 | File | Responsibility |
@@ -12,7 +65,7 @@ The example program implements a complete robot vision workflow: calibrating the
 | `W_UPDATE_REFERENCE_FRAME.tp` | Detects the calibration target and updates a reference frame (e.g. for mobile platforms). |
 | `W_MOVE.tp` | Helper that moves the robot to the exchange pose register, PTP or LIN depending on `w_use_ptp_reg`. |
 
-The KAREL backend takes TP call parameters as **inputs** and returns its values to **global registers**. The exchange registers and the full list of callable routines are documented in [KAREL Reference](../4_0_reference/index.md).
+The KAREL backend takes TP call parameters as **inputs** and returns its values to **global registers**.
 
 ## Calibration and validation process
 
@@ -35,9 +88,9 @@ For the optional validation, the robot will first move to the detection pose as 
 <!-- PLACEHOLDER IMAGE: Validation - robot above bottom-left corner of the plate -->
 ![TODO: Validation move](images/03_validation.png)
 
-!!! note
-
-    For what a good calibration looks like (Z-axis orientation, expected reprojection error values), see the [Calibration Guidelines](https://wenglor.github.io/wenglor-robot-vision/4_0_robot_vision_server/4_1_calibration_guidelines/) in the wenglor robot vision manual.
+> NOTE
+>
+> For what a good calibration looks like (Z-axis orientation, expected reprojection error values), see the [Calibration Guidelines](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_1_calibration_guidelines/) in the wenglor robot vision manual.
 
 ### Camera on robot
 
@@ -49,7 +102,25 @@ The detection pose must be set by the user (see [User Configuration](../2_0_user
 
 ## TP programs
 
-Set up your TP program with the KAREL routines described in [KAREL Reference](../4_0_reference/index.md). You can also use the provided example programs `W_SINGLE_DETECT`, `W_MULTI_DETECT` or `W_UPDATE_REFERENCE_FRAME`.
+Set up your TP program with the KAREL routines described in [Callable KAREL routines](#callable-karel-routines). You can also use the provided example programs `W_SINGLE_DETECT`, `W_MULTI_DETECT` or `W_UPDATE_REFERENCE_FRAME`.
+
+```mermaid
+graph TD
+    A[TP program start] --> B["CALL W_LIBRARY('calibrate_if_needed', offset)"]
+    B --> C{Calibration data<br>on device?}
+    C -->|no| D["User prompts: Menu -> User<br>run_calibration / calc_calibration<br>calib_to_ground or calib_to_target"]
+    D --> E["validate_calibration<br>(optional)"]
+    C -->|yes| F["CALL W_LIBRARY('load_job', job_name.u3p)"]
+    E --> F
+    F --> G{Which TP program?}
+    G -->|W_SINGLE_DETECT| H["detect_objects -> w_pose_exch_reg"]
+    H --> I["CALL W_MOVE"]
+    G -->|W_MULTI_DETECT| J["detect_objects, num_objects"]
+    J --> K["FOR each index:<br>pose_by_index / shape_by_index / value_by_index"]
+    K --> L["CALL W_MOVE"]
+    G -->|W_UPDATE_REFERENCE_FRAME| M["detect_target -> w_pose_exch_reg"]
+    M --> N["Update user frame"]
+```
 
 <!-- PLACEHOLDER IMAGE: W_SINGLE_DETECT TP program listing on the teach pendant -->
 ![TODO: W_SINGLE_DETECT TP program](images/04_w_single_detect.png)
@@ -113,9 +184,9 @@ Used for mobile platforms and similar use cases (e.g. correcting positional devi
 
 On the first run, set/teach the machine poses relative to the updated reference frame, then re-run the program.
 
-!!! note
-
-    You may want to use a dedicated user frame for this use case. Replace the placeholder machine poses with your own.
+> NOTE
+>
+> You may want to use a dedicated user frame for this use case. Replace the placeholder machine poses with your own.
 
 ### `W_MOVE`
 

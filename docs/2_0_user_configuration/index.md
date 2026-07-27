@@ -7,9 +7,9 @@ To access the KAREL variables, select the corresponding PC file `W_LIBRARY`, the
 <!-- PLACEHOLDER IMAGE: Karel Vars list for W_LIBRARY -->
 ![TODO: Karel Vars for W_LIBRARY](images/01_karel_vars.png)
 
-!!! note
-
-    The variables are uninitialized until you run `W_LIBRARY` once. See [Installation & Setup → Initialize the KAREL variables](../1_0_installation/index.md#initialize-the-karel-variables).
+> NOTE
+>
+> The variables are uninitialized until you run `W_LIBRARY` once. See [Installation & Setup → Initialize the KAREL variables](../1_0_installation/index.md#initialize-the-karel-variables).
 
 ## User configurable KAREL variables
 
@@ -30,9 +30,9 @@ The following variables (prefix `w_`) can be adjusted under **Data → Karel Var
 | `w_use_ptp_reg` | `63` | Register (R) used to switch `W_MOVE` between PTP (`1`) and LIN (`0`). |
 | `w_group_no` | `1` | Robot group number. |
 
-!!! warning
-
-    Variables with a `wi_` prefix are internal and **must not** be changed.
+> WARNING
+>
+> Variables with a `wi_` prefix are internal and **must not** be changed.
 
 ## Calibration poses (`W_CALIB_POSES`)
 
@@ -60,6 +60,6 @@ Set the detection pose. By default, pose register `PR[65]` is used. If `PR[65]` 
 <!-- PLACEHOLDER IMAGE: Detection pose in PR[65] -->
 ![TODO: Detection pose PR[65]](images/03_detection_pose.png)
 
-!!! note
-
-    For the general calibration concepts — which calibration target to use, how to choose and vary the poses, and how to read the reprojection error — see the [Calibration Guidelines](https://wenglor.github.io/wenglor-robot-vision/4_0_robot_vision_server/4_1_calibration_guidelines/) in the wenglor robot vision manual. They are not repeated here.
+> NOTE
+>
+> For the general calibration concepts — which calibration target to use, how to choose and vary the poses, and how to read the reprojection error — see the [Calibration Guidelines](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_1_calibration_guidelines/) in the wenglor robot vision manual. They are not repeated here.

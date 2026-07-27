@@ -12,3 +12,8 @@ img.small {
   width: 25%;
   height: auto;
 }
+
+img.uniform-width {
+  width: 300px;
+  height: auto;
+}
