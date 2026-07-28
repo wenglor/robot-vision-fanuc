@@ -6,30 +6,38 @@
 
 This repository contains an example FANUC program to set up and start the generic vision interface to wenglor Machine Vision Devices on your FANUC robot.
 
-The robot vision example for FANUC consists of the following files:
+The robot vision example for FANUC consists of the following files, available in the [`sources`](https://github.com/wenglor/robot-vision-fanuc/tree/main/sources) directory of this repository:
 
-- `W_LIBRARY.pc` — KAREL library with all vision routines (socket communication, calibration, detection, conversions).
-- `W_SINGLE_DETECT.tp` — single object detection TP program.
-- `W_MULTI_DETECT.tp` — multiple object detection TP program.
-- `W_UPDATE_REFERENCE_FRAME.tp` — reference-frame update TP program.
-- `W_MOVE.tp` — helper TP program that moves the robot to a pose register (PTP or LIN).
+| File | Description |
+| --- | --- |
+| `w_library.pc` | KAREL library with all vision routines (socket communication, calibration, detection, conversions). |
+| `w_single_detect.tp` | Single object detection TP program. |
+| `w_multi_detect.tp` | Multiple object detection TP program. |
+| `w_update_reference_frame.tp` | Reference-frame update TP program. |
+| `w_move.tp` | Helper TP program that moves the robot to a pose register (PTP or LIN). |
 
 > NOTE
 >
-> The robot example is available on [www.wenglor.com/product/DNNF023](https://www.wenglor.com/product/DNNF023) → Downloads → Programming examples and configuration files → Examples_Robot_Vision.
->
-> - It was tested with the **FANUC R-30iB Mate Plus** robot controller with software **V9.40** and the **LR Mate 200iD** robot arm. Make sure to use the same software version on the FANUC robot controller.
+> - Tested with the **FANUC R-30iB Mate Plus** robot controller running software **V9.40** and the **LR Mate 200iD** robot arm. Make sure to use the same software version on your FANUC robot controller.
 > - Working with KAREL files requires the system variable `$KAREL_ENB` to be set to `1`.
 
 ---
 
-## Table of Contents
+## How the manual is organized
 
-1. [Installation & Setup](1_0_installation/index.md)
-2. [User Configuration](2_0_user_configuration/index.md)
-3. [Robot Program](3_0_robot_program/index.md)
-4. [Troubleshooting](4_0_troubleshooting/index.md)
-5. [Support & Feedback](5_0_support_and_feedback/index.md)
+```mermaid
+graph LR
+    A[1. Installation & Setup] --> B[2. User Configuration]
+    B --> C[3. Robot Program]
+    C -.-> D[4. Troubleshooting]
+    D -.-> E[5. Support & Feedback]
+```
+
+1. [Installation & Setup](1_0_installation/index.md) — prepare the controller, network, and tool frame, then transfer the files.
+2. [User Configuration](2_0_user_configuration/index.md) — adjust the KAREL variables and poses to your setup.
+3. [Robot Program](3_0_robot_program/index.md) — how the KAREL library and TP programs work together.
+4. [Troubleshooting](4_0_troubleshooting/index.md) — common issues and how to resolve them.
+5. [Support & Feedback](5_0_support_and_feedback/index.md) — where to report bugs or suggest features.
 
 > NOTE
 >

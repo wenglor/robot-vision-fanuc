@@ -2,7 +2,7 @@
 
 **Version:** 1.0.0
 
-This repository demonstrates how to use the Generic Vision Interface with wenglor vision devices on a FANUC controller. The included KAREL library (`W_LIBRARY.pc`) and TP programs form a working sample program that you can adopt and customize for your application.
+This repository demonstrates how to use the Generic Vision Interface with wenglor Machine Vision Devices on a FANUC controller. The included KAREL library (`w_library.pc`) and TP programs form a working sample program that you can adopt and customize for your application.
 
 > NOTE
 >
@@ -34,7 +34,7 @@ This repository demonstrates how to use the Generic Vision Interface with wenglo
 
 - Basic knowledge of **TP** and **KAREL** programming.
 - A FANUC controller with the system variable `$KAREL_ENB` set to `1`.
-- **Socket Messaging** (Host Comm client) configured for the vision device.
+- **Socket Messaging** (Host Comm client) configured for the Machine Vision Device.
 - A [B60](https://www.wenglor.com/en/Machine-Vision/Smart-Cameras-and-Vision-Sensors/Smart-Camera-B60/c/cxmCID221375) or [Machine Vision Controller (MVC)](https://www.wenglor.com/en/Machine-Vision/Machine-Vision-Controllers/c/cxmCID221381).
 - A [uniVision](https://www.wenglor.com/en/Machine-Vision/Machine-Vision-Software/Image-Processing-Software-uniVision-3/c/cxmCID222459) job for calibration and object detection.
 
@@ -71,7 +71,7 @@ Adjust the variables under **Data → Karel Vars** after selecting the `W_LIBRAR
 ### Adjusting Parameters
 
 <details>
-   <summary>Click to see the relevant parameter adjustments in the W_LIBRARY.pc file</summary>
+   <summary>Click to see the relevant parameter adjustments in the w_library.pc file</summary>
 
 | Variable | Default | Note |
 | --- | --- | --- |
@@ -96,8 +96,8 @@ Set up to eleven calibration poses (minimum five) in the `W_CALIB_POSES` array u
 ### Communication Errors
 
 - Verify IP/port in KAREL variables
-- Ensure the robot server on the vision device is active
-  - Go to the device website->Jobs->Processing Instance->Robot Server
+- Ensure the robot server on the Machine Vision Device is active
+  - Go to the device website → Jobs → Processing Instance → Robot Server
 - Check network connectivity/firewall
 
 ### Insufficient Calibration Accuracy
@@ -105,7 +105,7 @@ Set up to eleven calibration poses (minimum five) in the `W_CALIB_POSES` array u
 You can use more than 5 calibration poses by adding more calibration poses in the `W_CALIB_POSES` array under **Data → Karel Pos**.
 
 <details>
-   <summary>Click to see where to set the poses in the W_LIBRARY.pc file</summary>
+   <summary>Click to see where to set the poses in the w_library.pc file</summary>
 
 Set up to eleven calibration poses (minimum five) in the `W_CALIB_POSES` array under **Data → Karel Pos**. For better accuracy, use seven to eleven poses with increased variation, especially in pose angles.
 

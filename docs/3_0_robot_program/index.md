@@ -31,7 +31,7 @@ Call a routine with `CALL W_LIBRARY('<routine>' [, <arg>])`. The results are wri
 | `run_calibration` | — | `CALL W_LIBRARY('run_calibration')` | — |
 | `validate_calibration` | 1. safety offset in mm (REAL) | `CALL W_LIBRARY('validate_calibration', 10.5)` | Moves robot to the target for visual validation. |
 | `calibrate_if_needed` | 1. safety offset in mm (REAL) | `CALL W_LIBRARY('calibrate_if_needed', 10.5)` | Runs a calibration only if no calibration data is present. |
-| `detect_objects` | — | `CALL W_LIBRARY('detect_objects')` | `w_pose_exch_reg`: object pose linked to uniVision `Device Robot Vision` Result List Index 0. |
+| `detect_objects` | — | `CALL W_LIBRARY('detect_objects')` | `w_pose_exch_reg`: object pose at Result List index 0 of the uniVision `Device Robot Vision`. |
 | `detect_target` | — | `CALL W_LIBRARY('detect_target')` | `w_pose_exch_reg`: calibration target pose. |
 | `num_objects` | — | `CALL W_LIBRARY('num_objects')` | `w_exch_reg_1`: number of found objects. |
 | `pose_by_index` | 1. index of object | `CALL W_LIBRARY('pose_by_index',R[11])` | `w_pose_exch_reg`: object pose for the given index. |
@@ -40,7 +40,7 @@ Call a routine with `CALL W_LIBRARY('<routine>' [, <arg>])`. The results are wri
 
 > NOTE
 >
-> The KAREL routines are thin wrappers around the generic string based robot vision API. For the underlying commands, return values, and error codes, see the [Generic Robot Vision Interface](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_5_0_generic_robot_vision_interface/) in the wenglor robot vision manual.
+> The KAREL routines are thin wrappers around the generic string based robot vision API. For the underlying commands, return values, and error codes, see the [Generic Robot Vision Interface](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_7_0_generic_robot_vision_interface/) in the wenglor robot vision manual.
 
 > NOTE
 >
@@ -53,44 +53,43 @@ The generic robot vision API uses the following conventions, which the KAREL lib
 - Positions `x, y, z` are exchanged in **meters**; FANUC works in **millimeters**.
 - Orientations `rx, ry, rz` are exchanged as a **rotation vector** (Rodrigues convention, in radians); FANUC uses **W, P, R** Euler angles.
 
-See the command tables in the [Generic Robot Vision Interface](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_5_0_generic_robot_vision_interface/) in the wenglor robot vision manual.
+See the command tables in the [Generic Robot Vision Interface](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_7_0_generic_robot_vision_interface/) in the wenglor robot vision manual.
 
 ## Program structure
 
 | File | Responsibility |
 | --- | --- |
-| `W_LIBRARY.pc` | KAREL library. Socket communication with the robot server, calibration, detection, pose conversions, error handling, and all user-adjustable variables. See [User Configuration](../2_0_user_configuration/index.md). |
-| `W_SINGLE_DETECT.tp` | Calibrates if needed, loads the detection job, moves to the detection pose, detects a single object and moves to it. |
-| `W_MULTI_DETECT.tp` | Fills the buffer, reads the number of objects, and iterates over all detected objects. |
-| `W_UPDATE_REFERENCE_FRAME.tp` | Detects the calibration target and updates a reference frame (e.g. for mobile platforms). |
-| `W_MOVE.tp` | Helper that moves the robot to the exchange pose register, PTP or LIN depending on `w_use_ptp_reg`. |
+| `w_library.pc` | KAREL library. Socket communication with the robot server, calibration, detection, pose conversions, error handling, and all user-adjustable variables. See [User Configuration](../2_0_user_configuration/index.md). |
+| `w_single_detect.tp` | Calibrates if needed, loads the detection job, moves to the detection pose, detects a single object and moves to it. |
+| `w_multi_detect.tp` | Fills the buffer, reads the number of objects, and iterates over all detected objects. |
+| `w_update_reference_frame.tp` | Detects the calibration target and updates a reference frame (e.g. for mobile platforms). |
+| `w_move.tp` | Helper that moves the robot to the exchange pose register, PTP or LIN depending on `w_use_ptp_reg`. |
 
 The KAREL backend takes TP call parameters as **inputs** and returns its values to **global registers**.
 
 ## Calibration and validation process
 
-If there is no calibration file available on the Machine Vision Device, the calibration process is started automatically by the example program. Select either `W_SINGLE_DETECT`, `W_MULTI_DETECT` or `W_UPDATE_REFERENCE_FRAME` to run it.
+If no calibration file is available on the Machine Vision Device, the example program starts the calibration process automatically. Select either `W_SINGLE_DETECT`, `W_MULTI_DETECT`, or `W_UPDATE_REFERENCE_FRAME` to run it.
 
 The calibration process uses **user prompts**. To see them, go to **Menu → User**.
 
-<!-- PLACEHOLDER IMAGE: User prompt during calibration (Menu -> User) -->
-![TODO: Calibration user prompts](images/01_user_prompts.png)
+<figure class="align-left">
+<img src="images/select_user_menu_for_messages.png" alt="User menu for prompts" class="uniform-width-400"/>
+</figure>
 
-Use **SHIFT + F1** to answer `YES` and **SHIFT + F2** to answer `FALSE`. The program needs to be active so it can read the user input, so in total the **Deadman switch + SHIFT + F1 (or F2)** need to be pressed at the same time.
+Use **SHIFT + F1** to answer `YES` and **SHIFT + F2** to answer `NO`. The program must be active so it can read the input, so in total **Deadman switch + SHIFT + F1 (or F2)** must be pressed at the same time.
 
 The program returns the registered user input. After this, the calibration movement starts. When the calibration is done, the reprojection error is returned.
 
-<!-- PLACEHOLDER IMAGE: Reprojection error returned after calibration -->
-![TODO: Reprojection error](images/02_reprojection_error.png)
+<figure class="align-left">
+<img src="images/validation_request.png" alt="Reprojection error" class="uniform-width-400"/>
+</figure>
 
-For the optional validation, the robot will first move to the detection pose as a safe retreat pose, and then move to the bottom-left corner of the calibration plate. By default, a safety offset is applied (adjustable in the KAREL variable), so the robot moves *above* the calibration plate.
-
-<!-- PLACEHOLDER IMAGE: Validation - robot above bottom-left corner of the plate -->
-![TODO: Validation move](images/03_validation.png)
+For the optional validation, the robot first moves to the detection pose as a safe retreat pose, then moves to the bottom-left corner of the calibration plate. By default, a safety offset is applied (adjustable via the KAREL variable), so the robot moves *above* the calibration plate.
 
 > NOTE
 >
-> For what a good calibration looks like (Z-axis orientation, expected reprojection error values), see the [Calibration Guidelines](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_1_calibration_guidelines/) in the wenglor robot vision manual.
+> For what a good calibration looks like (Z-axis orientation, expected reprojection error values), see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/) in the wenglor robot vision manual.
 
 ### Camera on robot
 
@@ -98,7 +97,7 @@ The detection pose is set during the calibration and is also used for the valida
 
 ### Camera not on robot
 
-The detection pose must be set by the user (see [User Configuration](../2_0_user_configuration/index.md#set-the-calibration-and-detection-poses)). It is used as a retreat pose after the calibration movement — where you remove the calibration plate from the robot and place it on the object ground — and for the validation.
+The detection pose must be set by the user (see [User Configuration](../2_0_user_configuration/index.md#set-the-calibration-and-detection-poses)). It also serves as the retreat pose after the calibration movement. During this movement you remove the calibration plate from the robot and place it on the object ground; the same pose is used for validation.
 
 ## TP programs
 
@@ -123,7 +122,9 @@ graph TD
 ```
 
 <!-- PLACEHOLDER IMAGE: W_SINGLE_DETECT TP program listing on the teach pendant -->
-![TODO: W_SINGLE_DETECT TP program](images/04_w_single_detect.png)
+<figure class="align-left">
+<img src="images/w_single_detect.png" alt="W_SINGLE_DETECT TP program" class="uniform-width-400"/>
+</figure>
 
 ### `W_SINGLE_DETECT`
 
@@ -133,7 +134,7 @@ Calibrates if no calibration data is available, loads the detection job, moves t
   ! Calibrate if no calibration data is available
   CALL W_LIBRARY('calibrate_if_needed', 10.5)
   ! Load detection job
-  CALL W_LIBRARY('load_job','find_objs.u3p')
+  CALL W_LIBRARY('load_job','find_objects.u3p')
   ! Move to detection pose PR[65]
   ...
   ! Detect a single object; the pose is returned in PR[60]
@@ -148,7 +149,7 @@ Calibrates if needed, loads the detection job, moves to the detection pose, fill
 
 ```
   CALL W_LIBRARY('calibrate_if_needed', 10.5)
-  CALL W_LIBRARY('load_job','find_objs.u3p')
+  CALL W_LIBRARY('load_job','find_objects.u3p')
   ...
   ! Fill the buffer with a detection
   CALL W_LIBRARY('detect_objects')

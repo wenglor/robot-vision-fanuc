@@ -1,5 +1,15 @@
 # Troubleshooting
 
+| Symptom | Likely cause | Jump to |
+| --- | --- | --- |
+| KAREL variables show unexpected values | Variables never initialized | [KAREL variables are uninitialized](#karel-variables-are-uninitialized) |
+| Robot moves to the wrong pose or overwrites another program's register | Exchange or detection registers collide with existing usage | [Register conflicts](#register-conflicts) |
+| Socket errors, no response from the device | Network / socket messaging misconfigured | [Communication errors](#communication-errors) |
+| High reprojection error, inaccurate detections | Too few or too similar calibration poses | [Insufficient calibration accuracy](#insufficient-calibration-accuracy) |
+| Object detected but robot stops at the wrong height | uniVision height offset or tool frame incorrect | [Height offset in detected poses](#height-offset-in-detected-poses) |
+| Negative value in an exchange register | Vision device returned an error code | [Error codes returned by the device](#error-codes-returned-by-the-device) |
+| Calibration hangs, no prompt shown | Program inactive or Deadman switch not held | [No user prompts during calibration](#no-user-prompts-during-calibration) |
+
 ## KAREL variables are uninitialized
 
 - Run the KAREL program `W_LIBRARY` once to set the default values. It will return a cam error on the first run, but that is expected. After that, adjust the variables to your use case under **Data → Karel Vars**. See [Installation & Setup → Initialize the KAREL variables](../1_0_installation/index.md#initialize-the-karel-variables).
@@ -25,7 +35,7 @@
 - Prefer a wenglor ZVZJ calibration target over a printed one.
 - Check the reprojection error returned by `calc_calibration` — high values indicate a poor calibration.
 
-For the general calibration guidelines, see the [Calibration Guidelines](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_1_calibration_guidelines/) in the wenglor robot vision manual.
+For the general calibration guidelines, see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/) in the wenglor robot vision manual.
 
 ## Height offset in detected poses
 
@@ -34,9 +44,9 @@ For the general calibration guidelines, see the [Calibration Guidelines](https:/
 
 ## Error codes returned by the device
 
-If the robot server returns a negative error code (`-5001` … `-5010`), the KAREL library passes it through unchanged into the exchange register (or string register) that the calling routine writes to — it indicates a problem on the vision-device side, not in the KAREL library itself. For the meaning of each code, see the [Generic Robot Vision Interface → Error codes](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_5_0_generic_robot_vision_interface/#error-codes) in the wenglor robot vision manual.
+If the robot server returns a negative error code (`-5001` … `-5010`), the KAREL library passes it through unchanged into the exchange register (or string register) that the calling routine writes to. This indicates a problem on the vision-device side, not in the KAREL library itself. For the meaning of each code, see [Generic Robot Vision Interface → Error codes](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_7_0_generic_robot_vision_interface/#error-codes) in the wenglor robot vision manual.
 
 ## No user prompts during calibration
 
 - The calibration process uses user prompts shown under **Menu → User**. Make sure the program is active so it can read the input.
-- To answer a prompt, press **Deadman switch + SHIFT + F1** (`YES`) or **Deadman switch + SHIFT + F2** (`FALSE`) at the same time.
+- To answer a prompt, press **Deadman switch + SHIFT + F1** (`YES`) or **Deadman switch + SHIFT + F2** (`NO`) at the same time.

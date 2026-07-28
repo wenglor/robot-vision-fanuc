@@ -1,6 +1,6 @@
 # Installation & Setup
 
-The FANUC robot vision example is a KAREL library (`W_LIBRARY.pc`) together with a set of TP programs. Before running it, prepare the robot controller, the network connection to the Machine Vision Device, and the tool frame.
+The FANUC robot vision example is a KAREL library (`W_LIBRARY`) together with a set of TP programs. Before running it, prepare the robot controller, the network connection to the Machine Vision Device, and the tool frame.
 
 ## Tested configuration
 
@@ -12,13 +12,15 @@ The FANUC robot vision example is a KAREL library (`W_LIBRARY.pc`) together with
 
 ## Files
 
-Download the robot example from [www.wenglor.com/product/DNNF023](https://www.wenglor.com/product/DNNF023) → Downloads → Programming examples and configuration files → Examples_Robot_Vision. It consists of:
+The example files are in the [`sources`](https://github.com/wenglor/robot-vision-fanuc/tree/main/sources) directory of this repository:
 
-- `W_LIBRARY.pc` — the KAREL library containing all vision routines. See [User Configuration](../2_0_user_configuration/index.md).
-- `W_SINGLE_DETECT.tp` — single object detection example.
-- `W_MULTI_DETECT.tp` — multiple object detection example.
-- `W_UPDATE_REFERENCE_FRAME.tp` — reference-frame update example.
-- `W_MOVE.tp` — helper program that moves the robot to the exchange pose register (PTP or LIN).
+| File | Description |
+| --- | --- |
+| `w_library.pc` | The KAREL library containing all vision routines. See [User Configuration](../2_0_user_configuration/index.md). |
+| `w_single_detect.tp` | Single object detection example. |
+| `w_multi_detect.tp` | Multiple object detection example. |
+| `w_update_reference_frame.tp` | Reference-frame update example. |
+| `w_move.tp` | Helper program that moves the robot to the exchange pose register (PTP or LIN). |
 
 ## Commissioning steps
 
@@ -38,17 +40,30 @@ Adjust the network settings of the robot controller so it can reach the Machine 
 
 Select **TCP/IP** and enter the IP address of the robot controller (e.g. `192.168.100.11`).
 
-<!-- PLACEHOLDER IMAGE: TCP/IP network settings screen on the FANUC teach pendant -->
-![TODO: TCP/IP network settings](images/01_tcpip_network_settings.png)
+<table>
+<tr>
+<td>
+<figure>
+<img src="images/host_com.png" alt="Select Host Com" class="uniform-width-400"/>
+</figure>
+</td>
+<td>
+<figure>
+<img src="images/robot_ip_setup.png" alt="Robot IP address" class="uniform-width-400"/>
+</figure>
+</td>
+</tr>
+</table>
 
 ## Socket messaging
 
-To set the socket messaging client information, go to **Menu → (6) Setup → (9) Host Comm.** In this window, select **Show** (bottom bar) → **Clients**. Now select the client you want to use. In the example, we use **C1**. Set the IP address of the Machine Vision Device (by default `192.168.100.1`) and the port (by default `32006`).
+To set the socket messaging client information, go to **Menu → (6) Setup → Setup 2 → (9) Host Comm.** In this window, select **Show** (bottom bar) → **Clients**. Select the client you want to use — in this example, **C1**. Set the IP address of the Machine Vision Device (by default `192.168.100.1`) and the port (by default `32006`).
 
-For details, see socket messaging in the operating instructions of FANUC.
+For details, see the Socket Messaging section in the FANUC operating instructions.
 
-<!-- PLACEHOLDER IMAGE: Host Comm client (C1) configuration with device IP and port -->
-![TODO: Socket messaging client C1](images/02_socket_messaging_client.png)
+<figure class="align-left">
+<img src="images/socket_messaging.png" alt="Socket messaging client C1" class="uniform-width-400"/>
+</figure>
 
 > WARNING
 >
@@ -58,8 +73,9 @@ For details, see socket messaging in the operating instructions of FANUC.
 
 Go to **Menu → Setup → Frames → Other** (bottom bar) **→ Tool Frame**. In this window, select the tool ID. Select **Method** (bottom bar) and pick the method for setting the TCP (e.g. **Three Point**).
 
-<!-- PLACEHOLDER IMAGE: Tool Frame setup with Three Point method -->
-![TODO: Tool frame setup](images/03_tool_frame_setup.png)
+<figure class="align-left">
+<img src="images/set_tcp_three_point.png" alt="TODO: Tool frame setup" class="uniform-width-200"/>
+</figure>
 
 ## System variables
 
@@ -67,25 +83,23 @@ Check the system variables. Go to **Menu → Next → System → Variables**.
 
 `$KAREL_ENB` needs to be set to `1` to enable working with KAREL files. `W_LIBRARY` is a KAREL file, so this is required.
 
-<!-- PLACEHOLDER IMAGE: $KAREL_ENB system variable set to 1 -->
-![TODO: $KAREL_ENB system variable](images/04_karel_enb_variable.png)
-
 ## Transfer files to the robot
 
 To transfer the files to the robot, use **FTP** (set up similarly to socket messaging) or a **USB stick**.
 
 For transferring the files via a USB stick:
 
-1. Go to **Menu → File → File → UTIL** (bottom bar) **→ USB on TP** (or Teach Panel Slot) **/ USB Disk** (or Controller Slot).
+1. Go to **Menu → File → UTIL** (bottom bar) **→ USB on TP** (or Teach Panel Slot) **/ USB Disk** (or Controller Slot).
 2. Select and enter `*` (all files) **→ Copy** (bottom bar).
 3. Select the target device **Mem Device (MD)** → select **DO_COPY** (bottom bar).
 
-<!-- PLACEHOLDER IMAGE: File transfer from USB to Mem Device (MD) -->
-![TODO: Transfer files via USB](images/05_transfer_files_usb.png)
+<figure class="align-left">
+<img src="images/transfer_files.png" alt="Transfer files via USB" class="uniform-width-400"/>
+</figure>
 
 > NOTE
 >
-> On the Machine Vision Device website (Tab `Jobs` → `Robot Server`), make sure the robot server is active and the robot manufacturer is set to **Generic** (string based). See [Settings on Device Website](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_2_0_settings_on_device_website/) in the wenglor robot vision manual.
+> On the Machine Vision Device website (**Jobs → Processing Instance → Robot Server**), make sure the robot server is active and the robot manufacturer is set to **Generic** (string based). See [Settings on Device Website](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_3_0_settings_on_device_website/) in the wenglor robot vision manual.
 
 ## Initialize the KAREL variables
 

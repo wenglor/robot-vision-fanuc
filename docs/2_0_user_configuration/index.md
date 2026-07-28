@@ -4,8 +4,9 @@ All parameters you need to adapt to your setup are KAREL variables of the `W_LIB
 
 To access the KAREL variables, select the corresponding PC file `W_LIBRARY`, then go to **Data → Type** (bottom bar) **→ Karel Vars**.
 
-<!-- PLACEHOLDER IMAGE: Karel Vars list for W_LIBRARY -->
-![TODO: Karel Vars for W_LIBRARY](images/01_karel_vars.png)
+<figure class="align-left">
+<img src="images/karel_vars_uninit.png" alt="Karel Vars for W_LIBRARY" class="uniform-width-400"/>
+</figure>
 
 > NOTE
 >
@@ -46,20 +47,22 @@ The KAREL library exchanges registers to write the results of the commands. Plea
 
 Set up a maximum of eleven calibration poses (at least five). Depending on the use case, the detection pose is handled differently:
 
-- **Camera on robot:** The detection pose is set during the calibration and also used for the validation.
-- **Camera not on robot:** The detection pose needs to be set by the user. It is also used as a retreat pose after the calibration movement — in which you remove the calibration plate from the robot and place it on the object ground — and for the validation.
-- **Both cases:** Set the detection pose in a global register. By default, pose register **65** (`PR[65]`) is used, as you can see in the provided example programs `W_SINGLE_DETECT` and `W_MULTI_DETECT`.
+- **Camera on robot:** The detection pose is set during calibration and is also used for validation.
+- **Camera not on robot:** The detection pose must be set by the user. It also serves as the retreat pose after the calibration movement. During this movement you remove the calibration plate from the robot and place it on the object ground; the same pose is used for validation.
+- **Both cases:** Set the detection pose in a global register. By default, pose register **65** (`PR[65]`) is used, as shown in the provided example programs `W_SINGLE_DETECT` and `W_MULTI_DETECT`.
 
 Select the KAREL file `W_LIBRARY` → **Data → Karel Pos → W_CALIB_POSES**.
 
-<!-- PLACEHOLDER IMAGE: W_CALIB_POSES array under Karel Pos -->
-![TODO: W_CALIB_POSES](images/02_calib_poses.png)
+<figure class="align-left">
+<img src="images/calibration_poses_set.png" alt="W_CALIB_POSES" class="uniform-width-400"/>
+</figure>
 
 Set the detection pose. By default, pose register `PR[65]` is used. If `PR[65]` is used for other purposes, you can pick another PR, but then you need to update the TP programs accordingly. If you change the detection pose register, also update the `w_detect_pose_reg` KAREL variable.
 
-<!-- PLACEHOLDER IMAGE: Detection pose in PR[65] -->
-![TODO: Detection pose PR[65]](images/03_detection_pose.png)
+<figure class="align-left">
+<img src="images/set_detection_pose.png" alt="Detection pose PR[65]" class="uniform-width-200"/>
+</figure>
 
 > NOTE
 >
-> For the general calibration concepts — which calibration target to use, how to choose and vary the poses, and how to read the reprojection error — see the [Calibration Guidelines](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_1_calibration_guidelines/) in the wenglor robot vision manual. They are not repeated here.
+> For the general calibration concepts — which calibration target to use, how to choose and vary the poses, and how to read the reprojection error — see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/) in the wenglor robot vision manual. They are not repeated here.
