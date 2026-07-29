@@ -1,4 +1,4 @@
-# Installation & Setup
+# 1. Installation & Setup
 
 The FANUC robot vision example is a KAREL library (`W_LIBRARY`) together with a set of TP programs. Before running it, prepare the robot controller, the network connection to the Machine Vision Device, and the tool frame.
 
@@ -14,13 +14,16 @@ The FANUC robot vision example is a KAREL library (`W_LIBRARY`) together with a 
 
 The example files are in the [`sources`](https://github.com/wenglor/robot-vision-fanuc/tree/main/sources) directory of this repository:
 
+/// html | div.col-widths
+    attrs: {style: "--w1: 35%; --w2: 65%;"}
 | File | Description |
 | --- | --- |
-| `w_library.pc` | The KAREL library containing all vision routines. See [User Configuration](../2_0_user_configuration/index.md). |
+| `w_library.pc` | The KAREL library containing all vision routines. See [User Configuration](2_0_0_user_configuration.md). |
 | `w_single_detect.tp` | Single object detection example. |
 | `w_multi_detect.tp` | Multiple object detection example. |
 | `w_update_reference_frame.tp` | Reference-frame update example. |
 | `w_move.tp` | Helper program that moves the robot to the exchange pose register (PTP or LIN). |
+///
 
 ## Commissioning steps
 
@@ -65,9 +68,9 @@ For details, see the Socket Messaging section in the FANUC operating instruction
 <img src="images/socket_messaging.png" alt="Socket messaging client C1" class="uniform-width-400"/>
 </figure>
 
-> WARNING
->
-> The client tag configured here (e.g. `C1:`) must match the `w_client_tag` KAREL variable. See [User Configuration](../2_0_user_configuration/index.md).
+!!! warning
+
+    The client tag configured here (e.g. `C1:`) must match the `w_client_tag` KAREL variable. See [User Configuration](2_0_0_user_configuration.md).
 
 ## Tool setup
 
@@ -97,10 +100,10 @@ For transferring the files via a USB stick:
 <img src="images/transfer_files.png" alt="Transfer files via USB" class="uniform-width-400"/>
 </figure>
 
-> NOTE
->
-> On the Machine Vision Device website (**Jobs → Processing Instance → Robot Server**), make sure the robot server is active and the robot manufacturer is set to **Generic** (string based). See [Settings on Device Website](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_3_0_settings_on_device_website/) in the wenglor robot vision manual.
+!!! note
+
+    On the Machine Vision Device website (**Jobs → Processing Instance → Robot Server**), make sure the robot server is active and the robot manufacturer is set to **Generic** (string based). See [Settings on Device Website](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_3_0_settings_on_device_website/) in the wenglor robot vision manual.
 
 ## Initialize the KAREL variables
 
-The KAREL program uses several variables that are uninitialized at first. To set the default values, run the KAREL program `W_LIBRARY` once. It will return a cam error, but that is expected in this case. After that you can adjust the variables to your use case in [User Configuration](../2_0_user_configuration/index.md).
+The KAREL program uses several variables that are uninitialized at first. To set the default values, run the KAREL program `W_LIBRARY` once. It will return a cam error, but that is expected in this case. After that you can adjust the variables to your use case in [User Configuration](2_0_0_user_configuration.md).

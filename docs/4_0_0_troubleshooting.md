@@ -1,4 +1,4 @@
-# Troubleshooting
+# 4. Troubleshooting
 
 | Symptom | Likely cause | Jump to |
 | --- | --- | --- |
@@ -12,12 +12,12 @@
 
 ## KAREL variables are uninitialized
 
-- Run the KAREL program `W_LIBRARY` once to set the default values. It will return a cam error on the first run, but that is expected. After that, adjust the variables to your use case under **Data → Karel Vars**. See [Installation & Setup → Initialize the KAREL variables](../1_0_installation/index.md#initialize-the-karel-variables).
+- Run the KAREL program `W_LIBRARY` once to set the default values. It will return a cam error on the first run, but that is expected. After that, adjust the variables to your use case under **Data → Karel Vars**. See [Installation & Setup → Initialize the KAREL variables](1_0_0_installation.md#initialize-the-karel-variables).
 - Make sure the system variable `$KAREL_ENB` is set to `1` (**Menu → Next → System → Variables**). Without it, KAREL files cannot be used.
 
 ## Register conflicts
 
-- The KAREL library writes its results to exchange registers (`R[60]`–`R[62]`, `PR[60]`, `SR[60]` by default) and uses `PR[65]` for the detection pose and `R[63]` for the PTP/LIN switch. Check that these do not conflict with the registers used by your own programs and change them via the KAREL variables if required. See [Robot Program → Exchange registers](../3_0_robot_program/index.md#exchange-registers).
+- The KAREL library writes its results to exchange registers (`R[60]`–`R[62]`, `PR[60]`, `SR[60]` by default) and uses `PR[65]` for the detection pose and `R[63]` for the PTP/LIN switch. Check that these do not conflict with the registers used by your own programs and change them via the KAREL variables if required. See [Robot Program → Exchange registers](3_0_0_robot_program.md#exchange-registers).
 - If you change the detection pose register, update **both** the TP programs and the `w_detect_pose_reg` KAREL variable.
 
 ## Communication errors
@@ -40,7 +40,7 @@ For the general calibration guidelines, see the [Wenglor Robot Server overview](
 ## Height offset in detected poses
 
 - Check that the uniVision job is set properly, especially the height offset from the calibration target to the object in **Device Robot Vision**.
-- Ensure the correct tool frame (TCP) is active. See [Installation & Setup → Tool setup](../1_0_installation/index.md#tool-setup).
+- Ensure the correct tool frame (TCP) is active. See [Installation & Setup → Tool setup](1_0_0_installation.md#tool-setup).
 
 ## Error codes returned by the device
 

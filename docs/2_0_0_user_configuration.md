@@ -1,4 +1,4 @@
-# User Configuration
+# 2. User Configuration
 
 All parameters you need to adapt to your setup are KAREL variables of the `W_LIBRARY` program. Adjust them according to your needs before running the example.
 
@@ -8,17 +8,19 @@ To access the KAREL variables, select the corresponding PC file `W_LIBRARY`, the
 <img src="images/karel_vars_uninit.png" alt="Karel Vars for W_LIBRARY" class="uniform-width-400"/>
 </figure>
 
-> NOTE
->
-> The variables are uninitialized until you run `W_LIBRARY` once. See [Installation & Setup → Initialize the KAREL variables](../1_0_installation/index.md#initialize-the-karel-variables).
+!!! note
+
+    The variables are uninitialized until you run `W_LIBRARY` once. See [Installation & Setup → Initialize the KAREL variables](1_0_0_installation.md#initialize-the-karel-variables).
 
 ## User configurable KAREL variables
 
 The following variables (prefix `w_`) can be adjusted under **Data → Karel Vars** after selecting the KAREL program `W_LIBRARY`.
 
+/// html | div.col-widths
+    attrs: {style: "--w1: 25%; --w2: 20%; --w3: 55"}
 | Variable | Default | Note |
 | --- | --- | --- |
-| `w_client_tag` | `C1:` | Host Comm client tag configured for the vision device (see [Socket messaging](../1_0_installation/index.md#socket-messaging)). |
+| `w_client_tag` | `C1:` | Host Comm client tag configured for the vision device (see [Socket messaging](1_0_0_installation.md#socket-messaging)). |
 | `w_use_case` | `camera_on_robot` | Either `camera_on_robot` or `camera_not_on_robot`. |
 | `w_calib_target` | `zvzj002` | ID of calibration target (`zvzj001`, `zvzj002`, `zvzj003`, `zvzj004`). |
 | `w_calib_job` | `calibration.u3p` | uniVision job for calibration. |
@@ -30,16 +32,20 @@ The following variables (prefix `w_`) can be adjusted under **Data → Karel Var
 | `w_detect_pose_reg` | `65` | Detection pose register (PR) — keep in sync with the PR referenced by the TP programs. |
 | `w_use_ptp_reg` | `63` | Register (R) used to switch `W_MOVE` between PTP (`1`) and LIN (`0`). |
 | `w_group_no` | `1` | Robot group number. |
+///
 
-> WARNING
->
-> Variables with a `wi_` prefix are internal and **must not** be changed.
+!!! warning
+
+    Variables with a `wi_` prefix are internal and **must not** be changed.
 
 ## Calibration poses (`W_CALIB_POSES`)
 
+/// html | div.col-widths
+    attrs: {style: "--w1: 25%; --w2: 75%;"}
 | Variable | Note |
 | --- | --- |
 | `w_calib_poses` | Array of up to eleven XYZWPR calibration poses (minimum five required). Set under **Data → Karel Pos**. |
+///
 
 The KAREL library exchanges registers to write the results of the commands. Please check whether these registers conflict with your own register usage and change them if required.
 
@@ -63,6 +69,6 @@ Set the detection pose. By default, pose register `PR[65]` is used. If `PR[65]` 
 <img src="images/set_detection_pose.png" alt="Detection pose PR[65]" class="uniform-width-200"/>
 </figure>
 
-> NOTE
->
-> For the general calibration concepts — which calibration target to use, how to choose and vary the poses, and how to read the reprojection error — see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/) in the wenglor robot vision manual. They are not repeated here.
+!!! note
+
+    For the general calibration concepts — which calibration target to use, how to choose and vary the poses, and how to read the reprojection error — see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/) in the wenglor robot vision manual. They are not repeated here.
