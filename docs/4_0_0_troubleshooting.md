@@ -35,7 +35,7 @@
 - Prefer a wenglor ZVZJ calibration target over a printed one.
 - Check the reprojection error returned by `calc_calibration` — high values indicate a poor calibration.
 
-For the general calibration guidelines, see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/) in the wenglor robot vision manual.
+For the general calibration guidelines, see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_0_robot_vision_server/) in the wenglor robot vision manual.
 
 ## Height offset in detected poses
 
@@ -44,7 +44,7 @@ For the general calibration guidelines, see the [Wenglor Robot Server overview](
 
 ## Error codes returned by the device
 
-If the robot server returns a negative error code (`-5001` … `-5010`), the KAREL library passes it through unchanged into the exchange register (or string register) that the calling routine writes to. This indicates a problem on the vision-device side, not in the KAREL library itself. For the meaning of each code, see [Generic Robot Vision Interface → Error codes](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_7_0_generic_robot_vision_interface/#error-codes) in the wenglor robot vision manual.
+If the robot server returns a negative error code (`-5001` … `-5010`), the KAREL library passes it through unchanged into the exchange register (or string register) that the calling routine writes to. This indicates a problem on the vision-device side, not in the KAREL library itself. For the meaning of each code, see [Generic Robot Vision Interface → Error codes](https://wenglor.github.io/robot-vision-generic-string/4_7_0_generic_robot_vision_interface/#error-codes) in the wenglor robot vision manual.
 
 ## No user prompts during calibration
 

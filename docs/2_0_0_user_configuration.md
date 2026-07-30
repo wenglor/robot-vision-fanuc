@@ -17,7 +17,7 @@ To access the KAREL variables, select the corresponding PC file `W_LIBRARY`, the
 The following variables (prefix `w_`) can be adjusted under **Data → Karel Vars** after selecting the KAREL program `W_LIBRARY`.
 
 /// html | div.col-widths
-    attrs: {style: "--w1: 25%; --w2: 20%; --w3: 55"}
+    attrs: {style: "--w1: 25%; --w2: 20%; --w3: 55%"}
 | Variable | Default | Note |
 | --- | --- | --- |
 | `w_client_tag` | `C1:` | Host Comm client tag configured for the vision device (see [Socket messaging](1_0_0_installation.md#socket-messaging)). |
@@ -54,7 +54,7 @@ The KAREL library exchanges registers to write the results of the commands. Plea
 Set up a maximum of eleven calibration poses (at least five). Depending on the use case, the detection pose is handled differently:
 
 - **Camera on robot:** The detection pose is set during calibration and is also used for validation.
-- **Camera not on robot:** The detection pose must be set by the user. It also serves as the retreat pose after the calibration movement. During this movement you remove the calibration plate from the robot and place it on the object ground; the same pose is used for validation.
+- **Camera not on robot:** The detection pose must be set by the user. It also serves as the retreat pose after the calibration movement. During this movement you remove the calibration plate from the robot and place it on the object plane; the same pose is used for validation.
 - **Both cases:** Set the detection pose in a global register. By default, pose register **65** (`PR[65]`) is used, as shown in the provided example programs `W_SINGLE_DETECT` and `W_MULTI_DETECT`.
 
 Select the KAREL file `W_LIBRARY` → **Data → Karel Pos → W_CALIB_POSES**.
@@ -71,4 +71,4 @@ Set the detection pose. By default, pose register `PR[65]` is used. If `PR[65]` 
 
 !!! note
 
-    For the general calibration concepts — which calibration target to use, how to choose and vary the poses, and how to read the reprojection error — see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/) in the wenglor robot vision manual. They are not repeated here.
+    For the general calibration concepts — which calibration target to use, how to choose and vary the poses, and how to read the reprojection error — see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_0_robot_vision_server/) in the wenglor robot vision manual. They are not repeated here.

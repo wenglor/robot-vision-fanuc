@@ -102,7 +102,7 @@ For transferring the files via a USB stick:
 
 !!! note
 
-    On the Machine Vision Device website (**Jobs → Processing Instance → Robot Server**), make sure the robot server is active and the robot manufacturer is set to **Generic** (string based). See [Settings on Device Website](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_3_0_settings_on_device_website/) in the wenglor robot vision manual.
+    On the Machine Vision Device website (**Jobs → Processing Instance → Robot Server**), make sure the robot server is active and the robot manufacturer is set to **Generic** (string based). See [Settings on Device Website](https://wenglor.github.io/robot-vision-generic-string/4_3_0_settings_on_device_website/) in the wenglor robot vision manual.
 
 ## Initialize the KAREL variables
 

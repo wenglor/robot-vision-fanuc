@@ -34,7 +34,7 @@ Call a routine with `CALL W_LIBRARY('<routine>' [, <arg>])`. The results are wri
 | `calib_to_ground` | — | `CALL W_LIBRARY('calib_to_ground')` | — |
 | `calib_to_target` | — | `CALL W_LIBRARY('calib_to_target')` | — |
 | `run_calibration` | — | `CALL W_LIBRARY('run_calibration')` | — |
-| `validate_calibration` | 1. safety offset in mm (REAL) | `CALL W_LIBRARY('validate_calibration', 10.5)` | Moves robot to the target for visual validation. |
+| `validate_calibration` | 1. safety offset in mm (REAL) | `CALL W_LIBRARY('validate_calibration', 10.5)` | Moves the robot to the target for visual validation. |
 | `calibrate_if_needed` | 1. safety offset in mm (REAL) | `CALL W_LIBRARY('calibrate_if_needed', 10.5)` | Runs a calibration only if no calibration data is present. |
 | `detect_objects` | — | `CALL W_LIBRARY('detect_objects')` | `w_pose_exch_reg`: object pose at Result List index 0 of the uniVision `Device Robot Vision`. |
 | `detect_target` | — | `CALL W_LIBRARY('detect_target')` | `w_pose_exch_reg`: calibration target pose. |
@@ -46,11 +46,11 @@ Call a routine with `CALL W_LIBRARY('<routine>' [, <arg>])`. The results are wri
 
 !!! note
 
-    The KAREL routines are thin wrappers around the generic string based robot vision API. For the underlying commands, return values, and error codes, see the [Generic Robot Vision Interface](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_7_0_generic_robot_vision_interface/) in the wenglor robot vision manual.
+    The KAREL routines are thin wrappers around the generic string based robot vision API. For the underlying commands, return values, and error codes, see the [Generic Robot Vision Interface](https://wenglor.github.io/robot-vision-generic-string/4_7_0_generic_robot_vision_interface/) in the wenglor robot vision manual.
 
 !!! note
 
-    `detect_target` and `calib_to_target` wrap the `target:pose` and `calibration:target` commands, used to detect a calibration target's pose or recalibrate the camera-to-target relation without writing a new calibration file (e.g. for mobile platforms, see `W_UPDATE_REFERENCE_FRAME` below). See [Target Pose and Camera-to-Target Calibration](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_6_0_target_pose_and_camera_to_target/) in the wenglor robot vision manual.
+    `detect_target` and `calib_to_target` wrap the `target:pose` and `calibration:target` commands, used to detect a calibration target's pose or recalibrate the camera-to-target relation without writing a new calibration file (e.g. for mobile platforms, see `W_UPDATE_REFERENCE_FRAME` below). See [Target Pose and Camera-to-Target Calibration](https://wenglor.github.io/robot-vision-generic-string/4_6_0_target_pose_and_camera_to_target/) in the wenglor robot vision manual.
 
 ## Units and conventions
 
@@ -59,10 +59,12 @@ The generic robot vision API uses the following conventions, which the KAREL lib
 - Positions `x, y, z` are exchanged in **meters**; FANUC works in **millimeters**.
 - Orientations `rx, ry, rz` are exchanged as a **rotation vector** (Rodrigues convention, in radians); FANUC uses **W, P, R** Euler angles.
 
-See the command tables in the [Generic Robot Vision Interface](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/4_7_0_generic_robot_vision_interface/) in the wenglor robot vision manual.
+See the command tables in the [Generic Robot Vision Interface](https://wenglor.github.io/robot-vision-generic-string/4_7_0_generic_robot_vision_interface/) in the wenglor robot vision manual.
 
 ## Program structure
 
+/// html | div.col-widths
+    attrs: {style: "--w1: 35%; --w2: 65%;"}
 | File | Responsibility |
 | --- | --- |
 | `w_library.pc` | KAREL library. Socket communication with the robot server, calibration, detection, pose conversions, error handling, and all user-adjustable variables. See [User Configuration](2_0_0_user_configuration.md). |
@@ -70,6 +72,7 @@ See the command tables in the [Generic Robot Vision Interface](https://wenglor.g
 | `w_multi_detect.tp` | Fills the buffer, reads the number of objects, and iterates over all detected objects. |
 | `w_update_reference_frame.tp` | Detects the calibration target and updates a reference frame (e.g. for mobile platforms). |
 | `w_move.tp` | Helper that moves the robot to the exchange pose register, PTP or LIN depending on `w_use_ptp_reg`. |
+///
 
 The KAREL backend takes TP call parameters as **inputs** and returns its values to **global registers**.
 
@@ -95,7 +98,7 @@ For the optional validation, the robot first moves to the detection pose as a sa
 
 !!! note
 
-    For what a good calibration looks like (Z-axis orientation, expected reprojection error values), see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_robot_vision_server/) in the wenglor robot vision manual.
+    For what a good calibration looks like (Z-axis orientation, expected reprojection error values), see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_0_robot_vision_server/) in the wenglor robot vision manual.
 
 ### Camera on robot
 
@@ -103,7 +106,7 @@ The detection pose is set during the calibration and is also used for the valida
 
 ### Camera not on robot
 
-The detection pose must be set by the user (see [User Configuration](2_0_0_user_configuration.md#set-the-calibration-and-detection-poses)). It also serves as the retreat pose after the calibration movement. During this movement you remove the calibration plate from the robot and place it on the object ground; the same pose is used for validation.
+The detection pose must be set by the user (see [User Configuration](2_0_0_user_configuration.md#set-the-calibration-and-detection-poses)). It also serves as the retreat pose after the calibration movement. During this movement you remove the calibration plate from the robot and place it on the object plane; the same pose is used for validation.
 
 ## TP programs
 
