@@ -2,20 +2,19 @@
 
 **Version:** 1.0.0
 
-This repository demonstrates how to use the Generic Vision Interface with wenglor vision devices on a FANUC controller. The included KAREL library (`W_LIBRARY.pc`) and TP programs form a working sample program that you can adopt and customize for your application.
+This repository demonstrates how to use the Generic Vision Interface with wenglor Machine Vision Devices on a FANUC controller. The included KAREL library (`w_library.pc`) and TP programs form a working sample program that you can adopt and customize for your application.
 
 > NOTE
 >
-> This repository focuses exclusively on FANUC Robots-specific topics. For general robot vision information, please refer to the [wenglor robot vision manual](https://wenglor.github.io/wenglor-robot-vision/).
+> This repository focuses exclusively on FANUC Robots-specific topics. For general robot vision information, please refer to the [wenglor robot vision manual](https://wenglor.github.io/robot-vision-generic-string/).
 
-📖 **Full documentation** is available in the [online manual](https://wenglor.github.io/wenglor-fanuc-robots-vision/)
+📖 **Full documentation** is available in the [online manual](https://wenglor.github.io/robot-vision-fanuc/)
 
 ---
 
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
-- [Files](#files)
 - [Installation](#installation)
 - [Running the Sample Program](#running-the-sample-program)
 - [Configuration (`W_LIBRARY` KAREL variables)](#configuration-w_library-karel-variables)
@@ -23,6 +22,8 @@ This repository demonstrates how to use the Generic Vision Interface with wenglo
   - [Adjusting Parameters](#adjusting-parameters)
   - [Teaching Poses](#teaching-poses)
 - [Troubleshooting](#troubleshooting)
+  - [Communication Errors](#communication-errors)
+  - [Insufficient Calibration Accuracy](#insufficient-calibration-accuracy)
 - [Support & Feedback](#support--feedback)
 
 ---
@@ -33,21 +34,9 @@ This repository demonstrates how to use the Generic Vision Interface with wenglo
 
 - Basic knowledge of **TP** and **KAREL** programming.
 - A FANUC controller with the system variable `$KAREL_ENB` set to `1`.
-- **Socket Messaging** (Host Comm client) configured for the vision device.
+- **Socket Messaging** (Host Comm client) configured for the Machine Vision Device.
 - A [B60](https://www.wenglor.com/en/Machine-Vision/Smart-Cameras-and-Vision-Sensors/Smart-Camera-B60/c/cxmCID221375) or [Machine Vision Controller (MVC)](https://www.wenglor.com/en/Machine-Vision/Machine-Vision-Controllers/c/cxmCID221381).
 - A [uniVision](https://www.wenglor.com/en/Machine-Vision/Machine-Vision-Software/Image-Processing-Software-uniVision-3/c/cxmCID222459) job for calibration and object detection.
-
----
-
-## Files
-
-| File | Description |
-| --- | --- |
-| `W_LIBRARY.pc` | KAREL library with all vision routines and user-adjustable variables. |
-| `W_SINGLE_DETECT.tp` | Single object detection example. |
-| `W_MULTI_DETECT.tp` | Multiple object detection example. |
-| `W_UPDATE_REFERENCE_FRAME.tp` | Reference-frame update example. |
-| `W_MOVE.tp` | Helper program that moves the robot to the exchange pose register (PTP or LIN). |
 
 ---
 
@@ -81,6 +70,9 @@ Adjust the variables under **Data → Karel Vars** after selecting the `W_LIBRAR
 
 ### Adjusting Parameters
 
+<details>
+   <summary>Click to see the relevant parameter adjustments in the w_library.pc file</summary>
+
 | Variable | Default | Note |
 | --- | --- | --- |
 | `w_client_tag` | `C1:` | Host Comm client tag. |
@@ -89,7 +81,9 @@ Adjust the variables under **Data → Karel Vars** after selecting the `W_LIBRAR
 | `w_calib_job` | `calibration.u3p` | uniVision calibration job. |
 | `w_detect_pose_reg` | `65` | Detection pose register (PR). Keep in sync with the TP programs. |
 
-See the [User Configuration](https://wenglor.github.io/wenglor-fanuc-robots-vision/2_0_user_configuration/) page for the full list.
+See the [User Configuration](https://wenglor.github.io/robot-vision-fanuc/2_0_user_configuration/) page for the full list.
+
+</details>
 
 ### Teaching Poses
 
@@ -99,11 +93,25 @@ Set up to eleven calibration poses (minimum five) in the `W_CALIB_POSES` array u
 
 ## Troubleshooting
 
-- **Communication errors:** verify the controller IP, the Host Comm client (IP/port), and that the robot server on the device is active with **Generic** selected.
-- **KAREL variables uninitialized:** run `W_LIBRARY` once and check that `$KAREL_ENB = 1`.
-- **Insufficient calibration accuracy:** use more, more-varied poses and a wenglor ZVZJ target.
+### Communication Errors
 
-See the [Troubleshooting](https://wenglor.github.io/wenglor-fanuc-robots-vision/4_0_troubleshooting/) page for more.
+- Verify IP/port in KAREL variables
+- Ensure the robot server on the Machine Vision Device is active
+  - Go to the device website → Jobs → Processing Instance → Robot Server
+- Check network connectivity/firewall
+
+### Insufficient Calibration Accuracy
+
+You can use more than 5 calibration poses by adding more calibration poses in the `W_CALIB_POSES` array under **Data → Karel Pos**.
+
+<details>
+   <summary>Click to see where to set the poses in the w_library.pc file</summary>
+
+Set up to eleven calibration poses (minimum five) in the `W_CALIB_POSES` array under **Data → Karel Pos**. For better accuracy, use seven to eleven poses with increased variation, especially in pose angles.
+
+</details>
+
+See the [Troubleshooting](https://wenglor.github.io/robot-vision-fanuc/4_0_troubleshooting/) page for more.
 
 ---
 
