@@ -1,0 +1,1064 @@
+PROGRAM W_LIBRARY
+%COMMENT = 'Example program to use the wenglor Vision API'
+%NOLOCKGROUP
+%STACKSIZE = 4000
+%ENVIRONMENT REGOPE
+%ENVIRONMENT STRNG
+%ENVIRONMENT FLBT
+%ENVIRONMENT SYSDEF
+
+-- Version: 1.1.0;
+-- Author: wenglor sensoric group;
+
+   -- ===================== User configuration =====================
+   
+CONST
+	F1_COND_NUM = 1
+	F2_COND_NUM = 2
+	TOOL_NUM_REG = 64
+	FRAME_NUM_REG = 65
+	TP_F1 = 129
+	TP_F2 = 131
+	TP_SHIFT_F1 = 137
+	TP_SHIFT_F2 = 138
+
+-- Use a Host Comm Client Tag preconfigured to your vision device:
+-- Set C1 -> IP=192.168.100.1, PORT=32006, protocol=Socket Messaging (SM), TCP.
+VAR
+	w_client_tag IN SHADOW          : STRING[4]
+
+-- use_case: "camera_on_robot" | "camera_not_on_robot"
+	w_use_case IN SHADOW            : STRING[20]
+
+-- Calibration target: 
+-- "zvzj001" | "zvzj002" | "zvzj003" | "zvzj004" |
+-- "24x30mm" | "375x550mm" | "550x800mm"
+-- if you are using zvzj005, replace with zvzj001 and
+-- if you are using zvzj006, replace with zvzj002
+	w_calib_target IN SHADOW        : STRING[10]
+
+-- calibration job filename, detection jobs are defined in TP program
+	w_calib_job IN SHADOW           : STRING[40]
+
+-- position register lists (XYZWPR)
+	w_exch_reg_1 IN SHADOW          : INTEGER   -- where primary bool/int/float outputs are written to
+	w_exch_reg_2 IN SHADOW          : INTEGER   -- where secondary bool/int/float outputs are written to 
+	w_exch_reg_3 IN SHADOW          : INTEGER   -- where tertiary bool/int/float outputs are written to 
+    w_pose_exch_reg IN SHADOW       : INTEGER   -- where poses are written to for exchange with TP
+	w_string_exch_reg IN SHADOW     : INTEGER   -- where strings are written to for exchange with TP
+    w_detect_pose_reg IN SHADOW     : INTEGER   -- where detection pose is stored for exchange with TP
+	w_use_ptp_reg IN SHADOW         : INTEGER	-- Exchange register to TP to set PTP (1) or LIN (0) 
+    w_group_no IN SHADOW            : INTEGER   -- robot group number
+    w_tool_no IN SHADOW             : INTEGER   -- robot tool number
+    w_frame_no IN SHADOW            : INTEGER   -- robot user frame number
+
+-- ===================== POSES =====================
+    w_calib_poses IN SHADOW         : array[11] of XYZWPREXT -- min 5 poses, max 11 poses
+	
+-- ===================== Internal vars =====================
+   wi_connected                     : BOOLEAN
+   wi_vision_socket                 : FILE      -- file variable as buffer for socket messaging
+
+   -- User dialog variables, required here to be static
+	wi_input_done                   : BOOLEAN
+	wi_user_input                   : BOOLEAN
+
+
+ROUTINE INIT_SETUP
+VAR
+    status : INTEGER
+BEGIN
+    -- ===================== Default User configuration =====================
+    IF UNINIT(w_client_tag) THEN
+        w_client_tag = 'C1:'				-- enter the client ID you set up before
+    ENDIF
+    IF UNINIT(w_use_case) THEN
+        w_use_case = 'camera_on_robot'	    -- choose 'camera_on_robot' or 'camera_not_on_robot'
+    ENDIF
+    IF UNINIT(w_calib_target) THEN  
+        w_calib_target = 'zvzj002'			-- the ID of your calibration target
+    ENDIF
+    IF UNINIT(w_calib_job) THEN
+        w_calib_job = 'calibration.u3p'		-- the job used for the calibration
+    ENDIF
+    IF UNINIT(w_exch_reg_1) THEN
+        w_exch_reg_1 = 60                -- bool exchange register
+    ENDIF
+    IF UNINIT(w_exch_reg_2) THEN
+        w_exch_reg_2 = 61                 -- integer exchange register
+    ENDIF
+    IF UNINIT(w_exch_reg_3) THEN
+        w_exch_reg_3 = 62                -- real exchange register
+    ENDIF
+    IF UNINIT(w_use_ptp_reg) THEN
+        w_use_ptp_reg = 63                  -- used in program to set PTP or LIN, change in program, not here
+    ENDIF
+    IF UNINIT(w_pose_exch_reg) THEN
+        w_pose_exch_reg = 60                -- pose exchange register
+    ENDIF
+    IF UNINIT(w_string_exch_reg) THEN
+        w_string_exch_reg = 60              -- string exchange register
+    ENDIF
+    IF UNINIT(w_detect_pose_reg) THEN
+        w_detect_pose_reg = 65              -- detection pose register
+    ENDIF
+    IF UNINIT(w_group_no) THEN
+        w_group_no = 1                      -- default robot group number
+    ENDIF
+    IF UNINIT(w_tool_no) THEN
+        w_tool_no = 1                       -- default robot tool number
+    ENDIF
+	IF UNINIT(w_frame_no) THEN
+        w_frame_no = 0                      -- default user frame number
+    ENDIF
+
+    -- ===================== Status Initialization =====================
+    wi_connected = FALSE	
+    SET_INT_REG(TOOL_NUM_REG, w_tool_no, status)
+    SET_INT_REG(FRAME_NUM_REG, w_frame_no, status)
+END INIT_SETUP
+
+
+-- ===================== Utilities =====================
+ROUTINE VISION_ERROR(msg_in : STRING)
+BEGIN
+    WRITE TPERROR('cam: ', msg_in, CR)
+    WRITE TPDISPLAY('cam: ', msg_in, CR)
+    WRITE TPSTATUS('cam: ', msg_in, CR)
+END VISION_ERROR
+
+ROUTINE VISION_MESSAGE(msg_in : STRING)
+BEGIN
+    WRITE TPDISPLAY('cam: ', msg_in, CR)
+END VISION_MESSAGE
+
+ROUTINE VISION_DEBUG(msg_in : STRING)
+BEGIN
+    WRITE TPDISPLAY('<<DEBUG>>: ', msg_in, CR)
+END VISION_DEBUG
+
+ROUTINE USER_DIALOG(msg_in : STRING) : BOOLEAN
+BEGIN	
+    wi_input_done = FALSE
+    wi_user_input = FALSE
+    WRITE TPPROMPT(CHR(128),CHR(137),'cam: ', msg_in, CR)
+    
+    WRITE TPFUNC (CHR(128),CHR(137))
+    WRITE TPFUNC(' YES     NO')
+    ENABLE CONDITION[F1_COND_NUM]
+    ENABLE CONDITION[F2_COND_NUM]
+    	
+    WAIT FOR (wi_input_done = TRUE)
+
+    WRITE TPFUNC(CHR(128),CHR(137))  -- clear function keys
+    WRITE TPPROMPT(CHR(128),CHR(137)) -- clear prompt
+
+    DISABLE CONDITION[F1_COND_NUM]
+    DISABLE CONDITION[F2_COND_NUM]
+    	
+    IF (wi_user_input) THEN
+    	VISION_MESSAGE('User selected YES')
+    ELSE
+    	VISION_MESSAGE('User selected NO')
+    ENDIF
+
+    RETURN (wi_user_input)
+    
+END USER_DIALOG
+
+-- ============ Pose helpers (PR<->string "[x,y,z,w,p,r]") ============
+ROUTINE MOVE_TO_POSE(pose : XYZWPREXT; is_ptp_in : INTEGER)
+CONST
+    PROGRAM_NAME = 'W_MOVE'
+VAR
+    status, prog_index : INTEGER
+BEGIN
+    IF (is_ptp_in < 0) OR (is_ptp_in > 1) THEN
+        VISION_ERROR('Invalid is_ptp_in')
+        RETURN
+    ENDIF
+
+    -- set desired movement to PTP
+    SET_INT_REG(w_use_ptp_reg, is_ptp_in, status)
+    -- set next calibration pose as target pose
+    SET_POS_REG(w_pose_exch_reg, (pose), status)
+    -- call program that executes the movement
+    CALL_PROG(PROGRAM_NAME, prog_index)
+
+    IF status <> 0 THEN
+        VISION_ERROR('Failed to call ' + PROGRAM_NAME)
+    ENDIF
+END MOVE_TO_POSE
+
+ROUTINE IS_POSE_SET(pose_in : XYZWPREXT) : BOOLEAN
+BEGIN
+    IF UNINIT(pose_in) THEN
+        RETURN (FALSE)
+    ELSE
+        RETURN (TRUE)
+    ENDIF
+END IS_POSE_SET
+
+ROUTINE POSE_TO_STRING(pose_in : XYZWPREXT; pose_string_out : STRING)
+VAR 
+    pose_x, pose_y, pose_z, pose_w, pose_p, pose_r : STRING[20]
+BEGIN
+    CNV_REAL_STR(pose_in.x, 1, 6, pose_x)
+    CNV_REAL_STR(pose_in.y, 1, 6, pose_y)
+    CNV_REAL_STR(pose_in.z, 1, 6, pose_z)
+    CNV_REAL_STR(pose_in.w, 1, 6, pose_w)
+    CNV_REAL_STR(pose_in.p, 1, 6, pose_p)
+    CNV_REAL_STR(pose_in.r, 1, 6, pose_r)
+
+    pose_string_out = '[' + pose_x + ',' + pose_y + ',' + pose_z + ',' +
+                            pose_w + ',' + pose_p + ',' + pose_r + ']'
+END POSE_TO_STRING
+
+ROUTINE REMOVE_CHARS_FROM_STRING(input_str : STRING; chars_to_remove_in : STRING; clean_str_out : STRING)
+VAR 
+    check_char : STRING[1]
+    bad_char : STRING[1]
+    char_ok : BOOLEAN
+    check_char_iter, bad_char_iter : INTEGER
+BEGIN
+    clean_str_out = ''
+    FOR check_char_iter = 1 TO STR_LEN(input_str) DO
+        check_char = SUB_STR(input_str, check_char_iter, 1)
+        char_ok = TRUE
+        -- check if check_char is in chars_to_remove_in
+        FOR bad_char_iter = 1 TO STR_LEN(chars_to_remove_in) DO
+            -- is check_char equal to any bad_char?
+            bad_char = SUB_STR(chars_to_remove_in, bad_char_iter, 1)
+            IF check_char = bad_char THEN
+                char_ok = FALSE
+            ENDIF
+        ENDFOR
+        -- if char_ok still TRUE, then no bad char was found
+        IF char_ok THEN
+            clean_str_out = clean_str_out + check_char
+        ENDIF
+    ENDFOR
+END REMOVE_CHARS_FROM_STRING
+
+ROUTINE POSE_STRING_TO_ARRAY(input_str : STRING; delimiter_in : STRING; num_elements_in : INTEGER) : ARRAY OF REAL
+VAR 
+    output_array : ARRAY[6] OF REAL
+    value_str : STRING[40]
+    tmp_char : STRING[1]
+    string_index, value_index  : INTEGER
+BEGIN
+    value_str = ''
+    value_index = 1
+    FOR string_index = 1 TO STR_LEN(input_str) DO
+        tmp_char = SUB_STR(input_str, string_index, 1)
+        IF tmp_char <> delimiter_in THEN
+            value_str = value_str + tmp_char
+        ELSE
+            -- store value_str to array
+            CNV_STR_REAL(value_str, output_array[value_index])
+            value_index = value_index + 1
+            value_str = ''  -- reset for next value
+        ENDIF
+    ENDFOR
+
+    IF value_index = (num_elements_in) THEN
+        -- last value (no delimiter at end)
+        CNV_STR_REAL(value_str, output_array[value_index])
+    ELSE
+        -- error: not enough elements
+        FOR value_index = 1 TO num_elements_in DO
+            output_array[value_index] = 0.0
+        ENDFOR
+    ENDIF
+
+    RETURN (output_array)
+END POSE_STRING_TO_ARRAY
+
+ROUTINE GET_TCP_POSE : XYZWPREXT
+VAR
+    group_no_str, tool_no_str : STRING[10]
+    tool_pos : POSITION
+    entry, status : INTEGER
+    pose : XYZWPREXT
+    v_mask, g_mask : INTEGER 
+BEGIN
+    CNV_INT_STR(w_group_no, 1, 0, group_no_str)
+	CNV_INT_STR(w_tool_no, 1, 0, tool_no_str)
+	
+    -- Set the active tool number to w_tool_no	
+    SET_VAR(entry, '$DID', '$TOOLFRAME.ACTIVE_NUM[' + group_no_str + ']', w_tool_no, status)
+    -- Get the tool frame coordinate of the active tool 
+    GET_VAR(entry, '$DID', '$TOOLFRAME.FRAME[' + group_no_str + ',' + tool_no_str +']', tool_pos, status)
+    -- Set the active tool frame coordinate
+	SET_VAR(entry, '$DID', '$KAREL.TOOL_FRAME[' + group_no_str + ']', tool_pos, status)
+    
+	pose = CURPOS(v_mask, g_mask)
+    RETURN (pose)
+END GET_TCP_POSE
+
+-- Response like "[x,y,z,w,p,r]" -> XYZWPR (very tolerant parser)
+ROUTINE STRING_TO_POSE(pose_str_io : STRING; parsing_ok_out : BOOLEAN) : XYZWPREXT
+VAR 
+    clean : STRING[120]
+    bad_chars : STRING[7] 
+    delimiter : STRING[1] 
+    pose_array   : ARRAY[6] OF REAL
+    pose, current_pose  : XYZWPREXT
+BEGIN
+    parsing_ok_out = FALSE
+    bad_chars = '[' + '(' + ')' + ']' +  ' ' + CHR(13) + CHR(10)
+    delimiter = ','
+    -- remove brackets and spaces
+    REMOVE_CHARS_FROM_STRING(pose_str_io, bad_chars, clean)
+
+    -- now clean should be like "x,y,z,w,p,r"
+    pose_array = POSE_STRING_TO_ARRAY(clean, delimiter, 6)
+    
+    pose.x = pose_array[1]; pose.y = pose_array[2]; pose.z = pose_array[3];
+    pose.w = pose_array[4]; pose.p = pose_array[5]; pose.r = pose_array[6];
+    parsing_ok_out = TRUE
+    
+    -- set ext/config data from current pose
+    current_pose = GET_TCP_POSE
+    
+    pose.config_data = current_pose.config_data
+    pose.ext1 = current_pose.ext1
+    pose.ext2 = current_pose.ext2
+    pose.ext3 = current_pose.ext3
+
+    RETURN (pose)
+END STRING_TO_POSE
+
+-- ===================== Socket helpers =====================
+
+ROUTINE CONNECT_SOCKET
+VAR 
+    status : INTEGER
+    int_string : STRING[40]
+BEGIN
+    -- Disconnect first for a defined state
+    MSG_DISCO(w_client_tag, status)
+    DELAY 500  -- wait a bit
+
+    status = 0
+
+    -- Connect to vision device
+    MSG_CONNECT(w_client_tag, status)
+
+    wi_connected = (status = 0)
+    IF wi_connected THEN
+        OPEN FILE wi_vision_socket( 'rw', w_client_tag )
+        -- If file is opened successfully
+        IF (IO_STATUS(wi_vision_socket)= 0) THEN
+            wi_connected = TRUE
+        ELSE
+            wi_connected = FALSE
+            VISION_MESSAGE('Socket could not be opened')
+        ENDIF
+    ENDIF
+
+    IF NOT wi_connected THEN
+        CNV_INT_STR(status, 1, 0, int_string)
+        VISION_ERROR('Socket connect failed: ' + int_string)
+    ENDIF
+END CONNECT_SOCKET
+
+ROUTINE CLOSE_SOCKET
+VAR status : INTEGER
+BEGIN
+    CLOSE FILE wi_vision_socket
+    MSG_DISCO(w_client_tag, status)
+    wi_connected = FALSE
+END CLOSE_SOCKET
+
+ROUTINE SAFE_SHUTDOWN(error_msg_in : STRING)
+BEGIN
+    CLOSE_SOCKET
+    PURGE CONDITION[F1_COND_NUM]
+    PURGE CONDITION[F2_COND_NUM]
+    VISION_ERROR(error_msg_in)
+    ABORT
+END SAFE_SHUTDOWN
+
+ROUTINE SEND_COMMAND(cmd_in : STRING) : BOOLEAN
+BEGIN
+    IF NOT wi_connected THEN
+        CONNECT_SOCKET
+    ENDIF
+    
+    IF NOT wi_connected THEN
+        VISION_MESSAGE('Socket still not connected.')
+        RETURN (FALSE) 
+    ENDIF
+    
+    WRITE wi_vision_socket(cmd_in)
+    cmd_in = ''  -- clear command string for safety
+    RETURN (TRUE)
+END SEND_COMMAND
+
+ROUTINE RECEIVE_RESPONSE(com_ok_out : BOOLEAN; reply_out : STRING)
+VAR 
+    int_string : STRING[40]
+    status : INTEGER
+BEGIN
+    READ wi_vision_socket( reply_out )
+    status = IO_STATUS(wi_vision_socket)
+    IF (status <> 0) THEN 
+        CNV_INT_STR(status, 1, 0, int_string)
+        VISION_ERROR('Receive failed: ' + int_string)
+        com_ok_out = FALSE
+        reply_out = ''
+    ELSE
+        com_ok_out = TRUE
+    ENDIF
+END RECEIVE_RESPONSE
+
+ROUTINE SEND_AND_RECEIVE(cmd_in : STRING; reply_out :STRING)
+-- sends a command and reads the reply
+VAR 
+    reply_length : INTEGER
+    com_ok : BOOLEAN
+BEGIN
+    com_ok = SEND_COMMAND(cmd_in)
+    IF NOT com_ok THEN
+        SAFE_SHUTDOWN('COM error, sending.')
+    ENDIF
+    
+    RECEIVE_RESPONSE(com_ok, reply_out)
+    
+    IF NOT com_ok THEN 
+        SAFE_SHUTDOWN('COM error, reading.')
+    ENDIF
+    reply_length = STR_LEN(reply_out)
+    reply_out = SUB_STR(reply_out, 1, reply_length)
+END SEND_AND_RECEIVE
+
+ROUTINE SET_ERROR_CODE(code_in : INTEGER)
+-- Sets the error message and safely shuts down in case of error
+VAR
+    error_msg : STRING[80]
+    value_string : STRING[10]
+BEGIN
+    code_in = ABS(code_in)
+    SELECT (code_in) OF
+        CASE (5001):
+            error_msg = 'General Error'
+        CASE (5002):
+            error_msg = 'Badly formatted request'
+        CASE (5003):
+            error_msg = 'No connection to uniVision'
+        CASE (5004):
+            error_msg = 'Unknown job name'
+        CASE (5005):
+            error_msg = 'Badly configured job'
+        CASE (5006):
+            error_msg = 'Calibration failed'
+        CASE (5007):
+            error_msg = 'No calibration data'
+        CASE (5008):
+            error_msg = 'No object found'
+        CASE (5009):
+            error_msg = 'Bad or empty device message'
+        CASE (5010):
+            error_msg = 'Index error'
+        CASE (5011):
+            error_msg = 'Calibration pose variation insufficient'
+        ELSE:
+            error_msg = 'Unknown error'
+    ENDSELECT
+    CNV_INT_STR(code_in, 1, 0, value_string)
+    SAFE_SHUTDOWN('CamError ' + value_string + ': ' + error_msg)
+END SET_ERROR_CODE
+
+ROUTINE CHECK_REPLY(resp_in : STRING)
+-- Checks if the reply contains an error code and handles it
+VAR error_code : INTEGER
+BEGIN
+    IF STR_LEN(resp_in) = 0 THEN
+        SAFE_SHUTDOWN('Com. error with vision device')
+    ENDIF
+    IF SUB_STR(resp_in,1,1) = '-' THEN
+        CNV_STR_INT(resp_in, error_code)
+        SET_ERROR_CODE(error_code)
+    ENDIF
+END CHECK_REPLY
+
+
+ROUTINE SEND_SIMPLE_CMD(cmd_in :STRING; reply_out :STRING)
+-- sends a command and checks for error code in reply
+BEGIN
+	reply_out = ''
+    SEND_AND_RECEIVE(cmd_in, reply_out)
+    CHECK_REPLY(reply_out)
+END SEND_SIMPLE_CMD
+
+-- ===================== Vision commands =====================
+
+ROUTINE LOAD_JOB(job : STRING; reply_buffer_in : STRING)
+BEGIN
+    SEND_SIMPLE_CMD('job:change[' + job + '];', reply_buffer_in)
+    reply_buffer_in = ''  -- clear for safety
+END LOAD_JOB
+
+ROUTINE GET_JOB(resp :STRING)
+BEGIN
+    SEND_SIMPLE_CMD('job:get;', resp)
+END GET_JOB
+
+ROUTINE UPDATE_CAMERA_STATUS(reply_buffer_in : STRING; calib_done_out : BOOLEAN)
+VAR
+    cam_error : BOOLEAN
+BEGIN
+    calib_done_out = FALSE
+    SEND_SIMPLE_CMD('state[' + w_use_case + '];', reply_buffer_in)
+    IF STR_LEN(reply_buffer_in) < 2 THEN
+        VISION_ERROR('Camera in error')
+        reply_buffer_in = ''  -- clear for safety
+        RETURN
+    ENDIF
+    cam_error = (SUB_STR(reply_buffer_in,1,1) = '1')
+
+    IF cam_error THEN
+        reply_buffer_in = ''  -- clear for safety
+        SAFE_SHUTDOWN('Camera in error state')
+    ENDIF
+
+    calib_done_out = (SUB_STR(reply_buffer_in,2,1) = '1')
+    reply_buffer_in = ''  -- clear for safety
+END UPDATE_CAMERA_STATUS
+
+ROUTINE CLEAR_CALIB_BUFFER(reply_buffer_in : STRING)
+BEGIN
+    SEND_SIMPLE_CMD('calibration:clear;', reply_buffer_in)
+    reply_buffer_in = ''  -- clear for safety
+END CLEAR_CALIB_BUFFER
+
+ROUTINE ADD_CALIB_POSE(reply_buffer_in : STRING)
+VAR 
+    pose : XYZWPREXT
+    full_pose : XYZWPREXT
+    pose_str : STRING[150]
+BEGIN
+    full_pose = GET_TCP_POSE
+    pose.x = full_pose.x; pose.y = full_pose.y; pose.z = full_pose.z
+    pose.w = full_pose.w; pose.p = full_pose.p; pose.r = full_pose.r
+    POSE_TO_STRING(pose, pose_str)
+    SEND_SIMPLE_CMD('calibration:add[' + pose_str + '];', reply_buffer_in)
+    reply_buffer_in = ''  -- clear for safety
+END ADD_CALIB_POSE
+
+ROUTINE CALCULATE_CALIBRATION(resp_out : STRING)
+BEGIN
+    SEND_SIMPLE_CMD('calibration:calculate[' + w_use_case + ',' + w_calib_target + '];', resp_out)
+END CALCULATE_CALIBRATION
+
+ROUTINE CALIB_TO_GROUND(reply_buffer_in : STRING)
+BEGIN
+-- Calibrates the camera to the ground relation for "camera_not_on_robot" only.
+-- Also creates a calibration file if robot-to-camera was calibrated before with "calibration:calculate".
+    IF w_use_case <> 'camera_not_on_robot' THEN
+        VISION_ERROR('Ground calib skipped.')
+        RETURN
+    ENDIF
+    SEND_SIMPLE_CMD('calibration:ground[' + w_calib_target + '];', reply_buffer_in)
+    reply_buffer_in = ''  -- clear for safety
+END CALIB_TO_GROUND
+
+ROUTINE CALIB_TO_TARGET(reply_buffer_in : STRING)
+BEGIN
+-- Calibrates the camera-to-target relation for the selected use case.
+-- Does not create a new calibration file; data is only stored temporarily in the device buffer.
+    SEND_SIMPLE_CMD('calibration:target[' + w_use_case + ',' + w_calib_target + '];', reply_buffer_in)
+    reply_buffer_in = ''  -- clear for safety
+END CALIB_TO_TARGET
+
+ROUTINE RUN_CALIBRATION(reply_buffer_in : STRING)
+VAR
+    calib_done, confirmed : BOOLEAN
+    int_string : STRING[20]
+    group_str, reg_str : STRING[10]
+    pose_index, pose_id, status : INTEGER
+    detection_pose : XYZWPREXT
+BEGIN
+    -- Check PRs are set (not all zero)
+    FOR pose_index = 1 TO 5 DO
+    	pose_id = pose_index
+        IF NOT IS_POSE_SET(w_calib_poses[pose_id]) THEN
+            CNV_INT_STR(pose_id, 1, 0, int_string)
+            SAFE_SHUTDOWN('Calibration pose not set: ' + int_string)
+        ENDIF
+    ENDFOR
+
+    -- Check camera status for calibration state
+    UPDATE_CAMERA_STATUS(reply_buffer_in, calib_done)
+
+    IF calib_done THEN
+        confirmed = USER_DIALOG('Calibration already done. Redo?')
+        IF NOT confirmed THEN
+            VISION_MESSAGE('Calibration skipped')
+            RETURN
+        ENDIF
+    ENDIF
+
+    -- clear calibration buffer to have a fresh start
+    CLEAR_CALIB_BUFFER(reply_buffer_in)
+    -- load the calibration job
+    LOAD_JOB(w_calib_job, reply_buffer_in)
+
+    -- Check if initial setup is complete
+    IF w_use_case = 'camera_on_robot' THEN
+        confirmed = USER_DIALOG('Place calibration board. Ready?')
+    ELSE
+    	IF w_use_case = 'camera_not_on_robot' THEN
+        	confirmed = USER_DIALOG('Mount board + select tool. Rdy?')
+    	ELSE
+        	SAFE_SHUTDOWN('Invalid use case' + '"' + w_use_case + '".')
+    	ENDIF
+    ENDIF
+
+    IF NOT confirmed THEN 
+        VISION_MESSAGE('Calibration aborted')
+        RETURN 
+    ENDIF
+
+    -- Move through calibration poses and send current TCP each time
+    pose_index = 1
+    WHILE (pose_index <= 11) AND (IS_POSE_SET(w_calib_poses[pose_index])) DO
+        MOVE_TO_POSE(w_calib_poses[pose_index], 1)  -- 1 = PTP move
+        ADD_CALIB_POSE(reply_buffer_in)
+        pose_index = pose_index + 1
+    ENDWHILE
+
+
+    -- Compute calibration
+    -- reply buffer is also used to return the reprojection error of the calibration
+    CALCULATE_CALIBRATION(reply_buffer_in)
+
+    VISION_MESSAGE('Calib done. Reproj. error: ' + reply_buffer_in)
+
+    -- If camera_on_robot, set detection pose = first calib pose
+    IF w_use_case = 'camera_on_robot' THEN
+        SET_POS_REG(w_detect_pose_reg, (w_calib_poses[1]),status, w_group_no)
+    ELSE
+        -- camera_not_on_robot: move to detection pose and run "calibrate to ground"
+        detection_pose = GET_POS_REG(w_detect_pose_reg, status , w_group_no)
+        IF status <> 0 THEN
+            CNV_INT_STR(w_group_no, 1, 0, group_str)
+            CNV_INT_STR(w_detect_pose_reg, 1, 0, reg_str)
+            SAFE_SHUTDOWN('Read PR[' + reg_str + '] for gid[' + group_str + '] failed')
+        ENDIF
+
+        IF NOT IS_POSE_SET(detection_pose) THEN
+            SAFE_SHUTDOWN('Detection pose not set.')
+        ENDIF
+        MOVE_TO_POSE(detection_pose, 1)  -- 1 = PTP move
+        confirmed = USER_DIALOG('Place board on ground + confirm.')
+        IF confirmed THEN
+            CALIB_TO_GROUND(reply_buffer_in)
+        ELSE
+            SAFE_SHUTDOWN('Calibration to ground aborted')
+        ENDIF
+    ENDIF
+    reply_buffer_in = ''  -- clear for safety
+END RUN_CALIBRATION
+
+ROUTINE VALIDATE_CALIBRATION(safety_offset_in : REAL; pose_str_in : STRING)
+VAR confirmed, calib_done : BOOLEAN
+    pose : XYZWPREXT
+    parsing_ok : BOOLEAN
+    status : INTEGER
+    group_str, reg_str : STRING[10]
+BEGIN
+    confirmed = USER_DIALOG('Want to validate the calibration?')
+    IF NOT confirmed THEN 
+        VISION_MESSAGE('Calibration validation aborted')
+        RETURN
+    ENDIF
+
+    UPDATE_CAMERA_STATUS(pose_str_in, calib_done)
+    IF NOT calib_done THEN
+        SAFE_SHUTDOWN('Abort. No calibration found.')
+    ENDIF
+    
+    
+    pose = GET_POS_REG(w_detect_pose_reg, status , w_group_no)
+    IF status <> 0 THEN
+        CNV_INT_STR(w_group_no, 1, 0, group_str)
+        CNV_INT_STR(w_detect_pose_reg, 1, 0, reg_str)
+        SAFE_SHUTDOWN('Read PR[' + reg_str + '] for gid ' + group_str + ' failed')
+    ENDIF
+
+    IF NOT IS_POSE_SET(pose) THEN
+        SAFE_SHUTDOWN('Detection pose not set.')
+    ENDIF
+
+    MOVE_TO_POSE(pose, 1)  -- 1 = PTP move
+    pose = GET_TCP_POSE
+    POSE_TO_STRING(pose, pose_str_in)
+    SEND_SIMPLE_CMD('validate[' + w_use_case + ',' + pose_str_in + '];', pose_str_in)
+
+    pose = STRING_TO_POSE(pose_str_in, parsing_ok)
+    pose_str_in = ''  -- clear for safety
+    IF NOT parsing_ok THEN
+        SAFE_SHUTDOWN('Could not parse target pose.')
+    ENDIF
+
+    pose.z = pose.z + safety_offset_in  -- add safety offset
+    MOVE_TO_POSE(pose, 0)  -- 0 = LINEAR move
+
+    confirmed = USER_DIALOG('Confirm after check to continue.')
+END VALIDATE_CALIBRATION
+
+ROUTINE DETECT_TARGET(pose_str_in : STRING) : XYZWPREXT
+VAR 
+    pose : XYZWPREXT
+    parsing_ok : BOOLEAN
+BEGIN
+    -- send current TCP pose
+    pose = GET_TCP_POSE
+    POSE_TO_STRING(pose, pose_str_in)
+    SEND_SIMPLE_CMD('"target:pose[' + w_use_case + ',' + w_calib_target + ',' + pose_str_in + '];', pose_str_in)
+
+    -- read target pose from reply
+    pose = STRING_TO_POSE(pose_str_in, parsing_ok)
+    pose_str_in = ''  -- clear for safety
+
+    IF NOT parsing_ok THEN
+        SAFE_SHUTDOWN('Failed to parse pose')
+    ENDIF
+
+    RETURN (pose)
+END DETECT_TARGET
+
+
+ROUTINE DETECT_OBJECTS(pose_str_in : STRING) : XYZWPREXT
+VAR 
+    pose : XYZWPREXT
+    parsing_ok : BOOLEAN
+BEGIN
+    -- build detect[use_case, [tcp]]
+    pose = GET_TCP_POSE
+    POSE_TO_STRING(pose, pose_str_in)
+    SEND_SIMPLE_CMD('detect[' + w_use_case + ',' + pose_str_in + '];', pose_str_in)
+
+    -- read object pose from reply
+    pose = STRING_TO_POSE(pose_str_in, parsing_ok)
+    pose_str_in = ''  -- clear for safety
+
+    IF NOT parsing_ok THEN
+        SAFE_SHUTDOWN('Failed to parse pose')
+    ENDIF
+
+    RETURN (pose)
+END DETECT_OBJECTS
+
+ROUTINE READ_NUM_OBJECTS(reply_string_in : STRING) : INTEGER
+VAR 
+    num_objects : INTEGER
+BEGIN
+    SEND_SIMPLE_CMD('num_objects:get;', reply_string_in)
+
+    CNV_STR_INT(reply_string_in, num_objects)
+    reply_string_in = ''  -- clear for safety
+    IF num_objects < 0 THEN
+        RETURN (-1) 
+    ENDIF
+    RETURN (num_objects)
+END READ_NUM_OBJECTS
+
+ROUTINE READ_POSE_BY_INDEX(idx_in : INTEGER; pose_string_in : STRING) : XYZWPREXT
+VAR 
+    int_string : STRING[40]
+    pose : XYZWPREXT
+    parsing_ok : BOOLEAN
+BEGIN
+    IF idx_in < 0 THEN
+        VISION_ERROR('Invalid index: READ_POSE_BY_INDEX')
+        RETURN (GET_TCP_POSE)
+    ENDIF
+
+    CNV_INT_STR(idx_in, 1, 0, int_string)
+    SEND_SIMPLE_CMD('pose:get[' + int_string + '];', pose_string_in)
+
+
+    pose = STRING_TO_POSE(pose_string_in, parsing_ok)
+    pose_string_in = ''  -- clear for safety
+    IF NOT parsing_ok THEN
+        SAFE_SHUTDOWN('Failed to parse pose')
+    ENDIF
+    RETURN (pose)
+END READ_POSE_BY_INDEX
+
+ROUTINE READ_SHAPE_BY_INDEX(idx_in : INTEGER; shape_string_in : STRING) : INTEGER
+VAR 
+    int_string : STRING[40]
+    id : INTEGER
+BEGIN
+    IF idx_in < 0 THEN
+        VISION_ERROR('Invalid index: READ_SHAPE_BY_INDEX')
+        RETURN (-1)
+    ENDIF
+
+    CNV_INT_STR(idx_in, 1, 0, int_string)
+    SEND_SIMPLE_CMD('shape:get[' + int_string + '];', shape_string_in)
+    CNV_STR_INT(shape_string_in, id)
+    shape_string_in = ''  -- clear for safety
+
+    RETURN (id)    
+END READ_SHAPE_BY_INDEX
+
+ROUTINE READ_VALUE_BY_INDEX(idx_in : INTEGER; value_string_out :STRING)
+VAR 
+    int_string : STRING[40]
+BEGIN
+    IF idx_in < 0 THEN
+        VISION_ERROR('Invalid index: READ_VALUE_BY_INDEX')
+        value_string_out = ''
+    ENDIF
+
+    CNV_INT_STR(idx_in, 1, 0, int_string)
+    SEND_SIMPLE_CMD('value:get[' + int_string + '];', value_string_out)
+END READ_VALUE_BY_INDEX
+
+ROUTINE CALIBRATE_IF_NEEDED(safety_offset : REAL; reply_buffer_in : STRING)
+VAR 
+    calib_done, confirmed : BOOLEAN
+BEGIN
+    UPDATE_CAMERA_STATUS(reply_buffer_in, calib_done)
+    IF NOT calib_done THEN
+        RUN_CALIBRATION(reply_buffer_in)
+        UPDATE_CAMERA_STATUS(reply_buffer_in, calib_done)
+        IF NOT calib_done THEN
+            SAFE_SHUTDOWN('Calibration failed')
+        ELSE
+            VALIDATE_CALIBRATION(safety_offset, reply_buffer_in)
+            confirmed = USER_DIALOG('Calibration done. Start detection?')
+            IF NOT confirmed THEN 
+                SAFE_SHUTDOWN('Aborted. Stopping program.')
+            ENDIF
+        ENDIF
+    ENDIF
+END CALIBRATE_IF_NEEDED
+
+
+ROUTINE READ_TP_STRING(cmd_ok_out : BOOLEAN; idx_in : INTEGER; str_out : STRING)
+-- reads a string value from the TP parameter at idx_in
+VAR 
+    data_type, int_value, status : INTEGER
+    real_value : REAL
+    str_value : STRING[150]
+BEGIN
+    GET_TPE_PRM(idx_in, data_type, int_value, real_value, str_value, status)
+    IF (status <> 0) OR (data_type <> 3) THEN
+        cmd_ok_out = FALSE
+        str_out = ''
+    ELSE
+        cmd_ok_out = TRUE
+        str_out = str_value
+    ENDIF
+END READ_TP_STRING
+
+ROUTINE READ_TP_INT(cmd_ok_out : BOOLEAN; idx_in : INTEGER) : INTEGER
+-- reads an integer value from the TP parameter at idx_in
+VAR 
+    data_type, int_value, status : INTEGER
+    real_value : REAL
+    str_value : STRING[150]
+BEGIN
+    GET_TPE_PRM(idx_in, data_type, int_value, real_value, str_value, status)
+    IF (status <> 0) OR (data_type <> 1) THEN
+        cmd_ok_out = FALSE
+        RETURN (-1)
+    ELSE
+        cmd_ok_out = TRUE
+        RETURN (int_value)
+    ENDIF
+END READ_TP_INT
+
+ROUTINE READ_TP_REAL(cmd_ok_out : BOOLEAN; idx_in : INTEGER) : REAL
+-- reads a real value from the TP parameter at idx_in
+VAR 
+    data_type, int_value, status : INTEGER
+    real_value : REAL
+    str_value : STRING[150]
+BEGIN
+    GET_TPE_PRM(idx_in, data_type, int_value, real_value, str_value, status)
+    IF (status <> 0) OR (data_type <> 2) THEN
+        IF data_type = 1 THEN
+            real_value = int_value * 1.0
+            RETURN (real_value)
+        ELSE
+            cmd_ok_out = FALSE
+            RETURN (-1.0)
+        ENDIF        
+    ELSE
+        cmd_ok_out = TRUE
+        RETURN (real_value)
+    ENDIF
+END READ_TP_REAL
+
+ROUTINE BOOL_TO_INT(bool_in : BOOLEAN) : INTEGER
+BEGIN
+    IF bool_in THEN
+        RETURN (1)
+    ELSE
+        RETURN (0)
+    ENDIF
+END BOOL_TO_INT
+
+ROUTINE PROCESS_TP_COMMAND
+VAR
+    read_buffer : STRING[150]
+    tp_cmd : STRING[60]
+    status, idx, int_out : INTEGER
+    safety_offset, reproj_error : REAL
+    cmd_ok, calib_done  : BOOLEAN
+    object_pose : XYZWPREXT
+BEGIN
+    -- read command from TP param 1 as string for routine selection 
+    READ_TP_STRING(cmd_ok, 1, tp_cmd)  
+    IF NOT cmd_ok THEN
+        SAFE_SHUTDOWN('Failed to read TP command')
+    ENDIF
+
+    -- update the camera status to check for errors and calibration state
+    IF tp_cmd = 'cam_status' THEN
+        UPDATE_CAMERA_STATUS(read_buffer, calib_done)
+        SET_INT_REG(w_exch_reg_1, BOOL_TO_INT(calib_done), status)
+    ENDIF
+
+    -- load the selected uniVision job
+    IF tp_cmd = 'load_job' THEN
+        -- read job name from TP param 2, the job has to end with '.u3p'
+        READ_TP_STRING(cmd_ok, 2, read_buffer)  
+        IF NOT cmd_ok THEN
+            SAFE_SHUTDOWN('Bad job parameter')
+        ENDIF
+        LOAD_JOB(read_buffer, read_buffer)
+    ENDIF
+
+    -- return the currently loaded job name, 
+    IF tp_cmd = 'get_job' THEN
+        GET_JOB(read_buffer)
+        SET_STR_REG(w_string_exch_reg, read_buffer, status)
+    ENDIF
+
+    IF tp_cmd = 'clear_calib_buffer' THEN
+        CLEAR_CALIB_BUFFER(read_buffer)
+    ENDIF
+
+    IF tp_cmd = 'add_calib_pose' THEN
+        ADD_CALIB_POSE(read_buffer)
+    ENDIF
+
+    IF tp_cmd = 'calc_calibration' THEN
+        CALCULATE_CALIBRATION(read_buffer)
+        CNV_STR_REAL(read_buffer, reproj_error)
+        SET_REAL_REG(w_exch_reg_1, reproj_error, status)
+    ENDIF
+
+    IF tp_cmd = 'calib_to_ground' THEN
+        CALIB_TO_GROUND(read_buffer)
+    ENDIF
+
+    IF tp_cmd = 'calib_to_target' THEN
+        CALIB_TO_TARGET(read_buffer)
+    ENDIF
+
+    -- manually run the calibration routine, this will override any existing calibration
+    IF tp_cmd = 'run_calibration' THEN
+        RUN_CALIBRATION(read_buffer)
+    ENDIF
+
+    -- run validation; robot moves to the lower-left corner of the calibration board with your safety offset.
+    -- Make sure the board was not moved after calibration. You can use this to check the calibration accuracy.
+    IF tp_cmd = 'validate_calibration' THEN
+        safety_offset = READ_TP_REAL(cmd_ok, 2)  -- read index from TP param 2
+        IF NOT cmd_ok THEN
+            SAFE_SHUTDOWN('Bad safety offset parameter')
+        ENDIF
+        VALIDATE_CALIBRATION(safety_offset, read_buffer)
+    ENDIF
+
+    IF tp_cmd = 'calibrate_if_needed' THEN
+        safety_offset = READ_TP_REAL(cmd_ok, 2)  -- read index from TP param 2
+        IF NOT cmd_ok THEN
+            SAFE_SHUTDOWN('Bad safety offset parameter')
+        ENDIF
+        CALIBRATE_IF_NEEDED(safety_offset, read_buffer)
+    ENDIF
+
+    -- run detection, fill the internal object list, and return the first detected pose in the pose exchange register
+    IF tp_cmd = 'detect_objects' THEN
+        object_pose = DETECT_OBJECTS(read_buffer)
+        SET_POS_REG(w_pose_exch_reg, (object_pose), status)
+    ENDIF
+
+    IF tp_cmd = 'detect_target' THEN
+        object_pose = DETECT_TARGET(read_buffer)
+        SET_POS_REG(w_pose_exch_reg, (object_pose), status)
+    ENDIF
+
+    -- return the number of detected objects from the last detection
+    IF tp_cmd = 'num_objects' THEN
+        int_out = READ_NUM_OBJECTS(read_buffer)
+        SET_INT_REG(w_exch_reg_1, int_out, status)
+    ENDIF
+
+    -- return the pose of the detected object from the last detection with the given index in the pose exchange register
+    -- index starts with 0
+    IF tp_cmd = 'pose_by_index' THEN
+        -- read index from TP param 2
+        idx = READ_TP_INT(cmd_ok ,2)  
+        IF NOT cmd_ok THEN
+            SAFE_SHUTDOWN('Bad index parameter')
+        ENDIF
+        object_pose = READ_POSE_BY_INDEX(idx, read_buffer)
+        SET_POS_REG(w_pose_exch_reg, (object_pose), status)
+    ENDIF
+
+    -- return the value of the detected object from the last detection with the given index in the string exchange register
+    -- index starts with 0, value can be any string, depending on your uniVision job configuration
+    IF tp_cmd = 'value_by_index' THEN
+        idx = READ_TP_INT(cmd_ok, 2)  -- read index from TP param 2
+        IF NOT cmd_ok THEN
+            SAFE_SHUTDOWN('Bad index parameter')
+        ENDIF
+        READ_VALUE_BY_INDEX(idx, read_buffer)
+        SET_STR_REG(w_string_exch_reg, read_buffer, status)
+    ENDIF
+
+    -- return the shape id of the detected object from the last detection with the given index in the integer exchange register
+    -- index starts with 0, shape id also starts with 0. So for two shapes, there would be shape id 0 and shape id 1
+    IF tp_cmd = 'shape_by_index' THEN
+        idx = READ_TP_INT(cmd_ok, 2)  -- read index from TP param 2
+        IF NOT cmd_ok THEN
+            SAFE_SHUTDOWN('Bad index parameter')
+        ENDIF
+        int_out = READ_SHAPE_BY_INDEX(idx, read_buffer)
+        SET_INT_REG(w_exch_reg_1, int_out, status)
+    ENDIF
+END PROCESS_TP_COMMAND
+
+-- ===================== Main =====================
+    BEGIN
+    CONDITION[F1_COND_NUM]:
+        WHEN TPIN[TP_F1]+ OR TPIN[TP_SHIFT_F1]+  DO
+            wi_user_input = TRUE
+            wi_input_done = TRUE
+    ENDCONDITION
+        
+    CONDITION[F2_COND_NUM]:
+        WHEN TPIN[TP_F2]+ OR TPIN[TP_SHIFT_F2]+  DO
+            wi_user_input = FALSE
+            wi_input_done = TRUE
+    ENDCONDITION
+
+    INIT_SETUP
+    PROCESS_TP_COMMAND
+    
+    CLOSE_SOCKET
+    PURGE CONDITION[F1_COND_NUM]
+    PURGE CONDITION[F2_COND_NUM]
+
+END W_LIBRARY

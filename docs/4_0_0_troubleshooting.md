@@ -29,13 +29,13 @@
 
 ## Insufficient calibration accuracy
 
-- Use more than five calibration poses (seven to eleven give better results). Add them to the `W_CALIB_POSES` array (**Data → Karel Pos**).
+- At least five calibration poses are required; teaching more improves accuracy (seven to eleven give better results). Add them to the `W_CALIB_POSES` array (**Data → Karel Pos**).
 - Increase the variation between poses — especially in the pose angles. The variance of the calibration *movements* matters more than the variance of the poses.
 - Make sure the calibration target covers as much of the camera image as possible and is fully visible.
 - Prefer a wenglor ZVZJ calibration target over a printed one.
 - Check the reprojection error returned by `calc_calibration` — high values indicate a poor calibration.
 
-For the general calibration guidelines, see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_0_robot_vision_server/) in the wenglor robot vision manual.
+For the general calibration guidelines, see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/5_1_0_basics_with_robot_server/) in the wenglor robot vision manual.
 
 ## Height offset in detected poses
 
@@ -44,7 +44,7 @@ For the general calibration guidelines, see the [Wenglor Robot Server overview](
 
 ## Error codes returned by the device
 
-If the robot server returns a negative error code (`-5001` … `-5010`), the KAREL library passes it through unchanged into the exchange register (or string register) that the calling routine writes to. This indicates a problem on the vision-device side, not in the KAREL library itself. For the meaning of each code, see [Generic Robot Vision Interface → Error codes](https://wenglor.github.io/robot-vision-generic-string/4_7_0_generic_robot_vision_interface/#error-codes) in the wenglor robot vision manual.
+If the robot server returns a negative error code (`-5001` … `-5010`), the KAREL library passes it through unchanged into the exchange register (or string register) that the calling routine writes to. This indicates a problem on the vision-device side, not in the KAREL library itself. For the meaning of each code, see [Generic Robot Vision API → Error codes](https://wenglor.github.io/robot-vision-generic-string/5_6_0_generic_robot_vision_api/#error-codes) in the wenglor robot vision manual.
 
 ## No user prompts during calibration
 

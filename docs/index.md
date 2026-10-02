@@ -6,23 +6,27 @@
 
 This repository contains an example FANUC program to set up and start the generic vision interface to wenglor Machine Vision Devices on your FANUC robot.
 
-The robot vision example for FANUC consists of the following files, available in the [`sources`](https://github.com/wenglor/robot-vision-fanuc/tree/main/sources) directory of this repository:
+The robot vision example for FANUC consists of the following files, available in the [`sources`](https://github.com/wenglor/robot-vision-fanuc/tree/main/sources) directory of this repository. They are provided once per controller software generation, in the folders `V9` and `V10` — transfer only the set that matches your controller software:
 
 /// html | div.col-widths
     attrs: {style: "--w1: 35%; --w2: 65%;"}
 
 | File | Description |
 | --- | --- |
+| `V9/`, `V10/` | One complete file set per controller software generation: `V9` for the software versions 9.10, 9.30 and 9.40, `V10` for 10.10. |
 | `w_library.pc` | KAREL library with all vision routines (socket communication, calibration, detection, conversions). |
+| `w_library.kl` | KAREL source code of the library, for reference and for recompiling it yourself. |
 | `w_single_detect.tp` | Single object detection TP program. |
 | `w_multi_detect.tp` | Multiple object detection TP program. |
 | `w_update_reference_frame.tp` | Reference-frame update TP program. |
 | `w_move.tp` | Helper TP program that moves the robot to a pose register (PTP or LIN). |
 ///
 
+The `sources` directory also contains plain-text listings of the TP programs (`.LS`) for reading them without a teach pendant. They are documentation only.
+
 !!! note
 
-    - Tested with the **FANUC R-30iB Mate Plus** robot controller running software **V9.40** and the **LR Mate 200iD** robot arm. Make sure to use the same software version on your FANUC robot controller.
+    - Tested with the **FANUC R-30iB Mate Plus** robot controller and the **LR Mate 200iD** robot arm. The supported controller software versions are **V9** (9.10, 9.30 and 9.40) and **V10** (10.10). Make sure to use the file set that matches your controller software.
     - Working with KAREL files requires the system variable `$KAREL_ENB` to be set to `1`.
 
 ---
@@ -45,4 +49,4 @@ graph LR
 
 !!! note
 
-    The generic robot vision API (commands, return values, error codes), the calibration guidelines, and the uniVision job setup are documented once in the [wenglor robot vision manual](https://wenglor.github.io/robot-vision-generic-string/4_0_0_robot_vision_server/) and are **not** repeated here. This manual only describes how the FANUC example uses them.
+    The generic robot vision API (commands, return values, error codes), the calibration guidelines, and the uniVision job setup are documented once in the [wenglor robot vision manual](https://wenglor.github.io/robot-vision-generic-string/5_1_0_basics_with_robot_server/) and are **not** repeated here. This manual only describes how the FANUC example uses them.

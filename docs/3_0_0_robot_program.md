@@ -46,11 +46,11 @@ Call a routine with `CALL W_LIBRARY('<routine>' [, <arg>])`. The results are wri
 
 !!! note
 
-    The KAREL routines are thin wrappers around the generic string based robot vision API. For the underlying commands, return values, and error codes, see the [Generic Robot Vision Interface](https://wenglor.github.io/robot-vision-generic-string/4_7_0_generic_robot_vision_interface/) in the wenglor robot vision manual.
+    The KAREL routines are thin wrappers around the generic string based robot vision API. For the underlying commands, return values, and error codes, see the [Generic Robot Vision API](https://wenglor.github.io/robot-vision-generic-string/5_6_0_generic_robot_vision_api/) in the wenglor robot vision manual.
 
 !!! note
 
-    `detect_target` and `calib_to_target` wrap the `target:pose` and `calibration:target` commands, used to detect a calibration target's pose or recalibrate the camera-to-target relation without writing a new calibration file (e.g. for mobile platforms, see `W_UPDATE_REFERENCE_FRAME` below). See [Target Pose and Camera-to-Target Calibration](https://wenglor.github.io/robot-vision-generic-string/4_6_0_target_pose_and_camera_to_target/) in the wenglor robot vision manual.
+    `detect_target` and `calib_to_target` wrap the `target:pose` and `calibration:target` commands, used to detect a calibration target's pose or recalibrate the camera-to-target relation without writing a new calibration file (e.g. for mobile platforms, see `W_UPDATE_REFERENCE_FRAME` below). See [Target Pose and Camera-to-Target Calibration](https://wenglor.github.io/robot-vision-generic-string/5_5_0_target_pose_and_camera_to_target/) in the wenglor robot vision manual.
 
 ## Units and conventions
 
@@ -59,7 +59,7 @@ The generic robot vision API uses the following conventions, which the KAREL lib
 - Positions `x, y, z` are exchanged in **meters**; FANUC works in **millimeters**.
 - Orientations `rx, ry, rz` are exchanged as a **rotation vector** (Rodrigues convention, in radians); FANUC uses **W, P, R** Euler angles.
 
-See the command tables in the [Generic Robot Vision Interface](https://wenglor.github.io/robot-vision-generic-string/4_7_0_generic_robot_vision_interface/) in the wenglor robot vision manual.
+See the command tables in the [Generic Robot Vision API](https://wenglor.github.io/robot-vision-generic-string/5_6_0_generic_robot_vision_api/) in the wenglor robot vision manual.
 
 ## Program structure
 
@@ -94,11 +94,11 @@ The program returns the registered user input. After this, the calibration movem
 <img src="images/validation_request.png" alt="Reprojection error" class="uniform-width-400"/>
 </figure>
 
-For the optional validation, the robot first moves to the detection pose as a safe retreat pose, then moves to the bottom-left corner of the calibration plate. By default, a safety offset is applied (adjustable via the KAREL variable), so the robot moves *above* the calibration plate.
+For the optional validation, the robot first moves to the detection pose as a safe retreat pose, then moves to the bottom-left corner of the calibration plate. By default, a safety offset is applied (adjustable via the TP call argument), so the robot moves *above* the calibration plate.
 
 !!! note
 
-    For what a good calibration looks like (Z-axis orientation, expected reprojection error values), see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/4_0_0_robot_vision_server/) in the wenglor robot vision manual.
+    For what a good calibration looks like (Z-axis orientation, expected reprojection error values), see the [Wenglor Robot Server overview](https://wenglor.github.io/robot-vision-generic-string/5_1_0_basics_with_robot_server/) in the wenglor robot vision manual.
 
 ### Camera on robot
 
@@ -130,7 +130,7 @@ graph TD
     M --> N["Update user frame"]
 ```
 
-<!-- PLACEHOLDER IMAGE: W_SINGLE_DETECT TP program listing on the teach pendant -->
+<!-- W_SINGLE_DETECT TP program listing on the teach pendant -->
 <figure class="align-left">
 <img src="images/w_single_detect.png" alt="W_SINGLE_DETECT TP program" class="uniform-width-400"/>
 </figure>

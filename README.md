@@ -2,7 +2,7 @@
 
 **Version:** 1.0.0
 
-This repository demonstrates how to use the Generic Vision Interface with wenglor Machine Vision Devices on a FANUC controller. The included KAREL library (`w_library.pc`) and TP programs form a working sample program that you can adopt and customize for your application.
+This repository demonstrates how to use the Generic Vision Interface with wenglor Machine Vision Devices on a FANUC controller. The included KAREL library (`w_library.pc`) and TP programs form a working sample program that you can adapt and customize for your application.
 
 > NOTE
 >
@@ -30,13 +30,13 @@ This repository demonstrates how to use the Generic Vision Interface with wenglo
 
 ## Prerequisites
 
-> Tested with a FANUC R-30iB Mate Plus controller (software V9.40) and an LR Mate 200iD robot arm.
+> Tested with a FANUC R-30iB Mate Plus controller and an LR Mate 200iD robot arm. Supported controller software: V9 (9.10, 9.30, 9.40) and V10 (10.10) — transfer only the `V9` or `V10` file set that matches your controller.
 
 - Basic knowledge of **TP** and **KAREL** programming.
 - A FANUC controller with the system variable `$KAREL_ENB` set to `1`.
 - **Socket Messaging** (Host Comm client) configured for the Machine Vision Device.
-- A [B60](https://www.wenglor.com/en/Machine-Vision/Smart-Cameras-and-Vision-Sensors/Smart-Camera-B60/c/cxmCID221375) or [Machine Vision Controller (MVC)](https://www.wenglor.com/en/Machine-Vision/Machine-Vision-Controllers/c/cxmCID221381).
-- A [uniVision](https://www.wenglor.com/en/Machine-Vision/Machine-Vision-Software/Image-Processing-Software-uniVision-3/c/cxmCID222459) job for calibration and object detection.
+- A [B60](https://www.wenglor.com/B60) or [Machine Vision Controller (MVC)](https://www.wenglor.com/MachineVisionController).
+- A [uniVision](https://www.wenglor.com/uniVision3) job for calibration and object detection.
 
 ---
 
@@ -81,7 +81,7 @@ Adjust the variables under **Data → Karel Vars** after selecting the `W_LIBRAR
 | `w_calib_job` | `calibration.u3p` | uniVision calibration job. |
 | `w_detect_pose_reg` | `65` | Detection pose register (PR). Keep in sync with the TP programs. |
 
-See the [User Configuration](https://wenglor.github.io/robot-vision-fanuc/2_0_user_configuration/) page for the full list.
+See the [User Configuration](https://wenglor.github.io/robot-vision-fanuc/2_0_0_user_configuration/) page for the full list.
 
 </details>
 
@@ -102,7 +102,7 @@ Set up to eleven calibration poses (minimum five) in the `W_CALIB_POSES` array u
 
 ### Insufficient Calibration Accuracy
 
-You can use more than 5 calibration poses by adding more calibration poses in the `W_CALIB_POSES` array under **Data → Karel Pos**.
+At least five calibration poses are required; you can add further poses to the `W_CALIB_POSES` array under **Data → Karel Pos**.
 
 <details>
    <summary>Click to see where to set the poses in the w_library.pc file</summary>
@@ -111,7 +111,7 @@ Set up to eleven calibration poses (minimum five) in the `W_CALIB_POSES` array u
 
 </details>
 
-See the [Troubleshooting](https://wenglor.github.io/robot-vision-fanuc/4_0_troubleshooting/) page for more.
+See the [Troubleshooting](https://wenglor.github.io/robot-vision-fanuc/4_0_0_troubleshooting/) page for more.
 
 ---
 
