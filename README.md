@@ -1,6 +1,6 @@
 # Example FANUC program files for the generic vision interface
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 
 This repository demonstrates how to use the Generic Vision Interface with wenglor Machine Vision Devices on a FANUC controller. The included KAREL library (`w_library.pc`) and TP programs form a working sample program that you can adapt and customize for your application.
 
